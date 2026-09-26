@@ -200,7 +200,7 @@ Convex
 # 6. R2 文件结构
 
 ```text
-newlook-production/
+newlook/
 
 uploads/
   user_{userId}/

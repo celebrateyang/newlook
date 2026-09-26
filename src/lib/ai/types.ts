@@ -1,10 +1,16 @@
 export type GenerationTask = "hair_try_on" | "reference_transfer";
 
+export interface ImageInput {
+  bytes: Uint8Array;
+  mimeType: "image/jpeg" | "image/png" | "image/webp";
+  filename: string;
+}
+
 export interface ImageEditParams {
   task: GenerationTask;
-  sourceImageUrl: string;
+  sourceImage: ImageInput;
   prompt: string;
-  referenceImageUrl?: string;
+  referenceImage?: ImageInput;
   count: number;
 }
 

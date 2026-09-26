@@ -23,7 +23,7 @@ The marketing site can render before credentials are configured. Authentication,
 
 1. Create the Clerk application, add its keys, create a JWT template named `convex`, and set `CLERK_JWT_ISSUER_DOMAIN` in both local and Convex environment settings.
 2. Run `pnpm convex dev` to create/link the Convex project and deploy `convex/schema.ts`.
-3. Create a private R2 bucket named `newlook-production`, allow browser PUT requests from the app origin, and add its S3 credentials.
+3. Create the private R2 bucket named `newlook`, allow browser PUT requests from the app origin, and add its S3 credentials.
 4. Add `OPENAI_API_KEY` for the initial GPT Image integration.
 5. Choose a payment provider later; checkout and webhook handling are intentionally deferred.
 

@@ -15,6 +15,10 @@ Last updated: 2026-09-26
 - Added an identity-preservation prompt.
 - Added Convex Clerk authentication configuration and authenticated upload CRUD.
 - Added an upload-completion endpoint that verifies the R2 object's size and MIME type before persisting metadata.
+- Connected and deployed the development Convex backend with Clerk JWT verification.
+- Added the first GPT Image hairstyle try-on provider using the Images edit API.
+- Added four controlled starter styles and a one-image try-on UI after analysis.
+- Added generation lifecycle, result, provider request, duration, and failure persistence in Convex.
 - Kept payments behind an interface; implementation is intentionally deferred.
 - Added `.env.example` and local setup documentation.
 
@@ -26,18 +30,16 @@ Last updated: 2026-09-26
 
 ## Not implemented yet
 
-- Real Clerk/Convex/R2 account connection.
-- Live Clerk/Convex/R2 verification with real project credentials.
-- OpenAI GPT Image provider implementation and real image generation.
-- Face and hair analysis.
+- Signed-in browser verification of the complete Clerk → R2 → Convex → OpenAI → R2 flow with a real selfie.
+- Persistence of face and hair analysis results in Convex.
 - Hairstyle seed data and recommendation engine.
-- Generation jobs, result persistence, feasibility analysis, and stylist guides.
+- Background generation jobs, feasibility analysis, and stylist guides.
 - Chinese localization.
 - Payments and production deployment.
 
 ## Next recommended milestone
 
-Connect Clerk, Convex, and R2 and verify the authenticated upload flow with real project credentials. Then implement the GPT Image provider and one end-to-end hairstyle try-on using the uploaded image.
+Verify the signed-in end-to-end try-on with a real selfie. Then persist face/hair analysis and replace the starter-style bridge with seeded hairstyle data and a deterministic recommendation engine.
 
 ## Environment
 
