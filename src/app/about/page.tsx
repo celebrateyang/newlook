@@ -1,0 +1,2 @@
+import { InfoPage } from "@/components/info-page";
+export default function AboutPage() { return <InfoPage eyebrow="ABOUT NEWLOOK" title="A clearer way to change your hair."><p>NewLook helps people move from inspiration to a haircut they can confidently ask for. It combines personal analysis, visual try-on, real-world feasibility, and precise salon instructions.</p><p>We are building a hair decision system—not another filter. The goal is a result that still looks like you and can be created by a real stylist.</p></InfoPage>; }

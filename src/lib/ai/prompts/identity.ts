@@ -1,0 +1,1 @@
+export const IDENTITY_PRESERVATION = `Change only the hairstyle. Preserve identity, facial structure, eyes, nose, lips, skin, expression, body, clothes, camera angle, lighting, and background. Do not beautify, reshape the face, retouch skin, change age, or change makeup.`;

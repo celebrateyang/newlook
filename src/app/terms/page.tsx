@@ -1,0 +1,2 @@
+import { InfoPage } from "@/components/info-page";
+export default function TermsPage() { return <InfoPage eyebrow="TERMS" title="Simple terms, before launch."><p>NewLook is currently in development. AI recommendations and feasibility assessments are guidance and do not replace a professional consultation with a qualified stylist.</p><p>Final terms will cover account use, purchases, acceptable uploads, intellectual property, model limitations, refunds and governing law before the service accepts payment.</p></InfoPage>; }

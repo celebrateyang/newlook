@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NewLook
 
-## Getting Started
+NewLook is an AI hairstyle advisor: it analyses a person's face and current hair, recommends suitable styles, visualises the result, evaluates whether it is achievable in real life, and produces a salon-ready guide.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router, TypeScript and Tailwind CSS
+- Clerk authentication
+- Convex database, realtime state and jobs
+- Private Cloudflare R2 image storage with browser-direct uploads
+- GPT Image as the initial provider, with pluggable Gemini and FLUX Kontext fallbacks
+- Vercel hosting
+
+## Local setup
+
+1. Copy `.env.example` to `.env.local` and add the project credentials.
+2. Run `pnpm dev`.
+3. Open `http://localhost:3000`.
+
+The marketing site can render before credentials are configured. Authentication, uploads and analysis become active after Clerk, Convex and R2 values are present.
+
+## Service setup order
+
+1. Create the Clerk application, add its keys, create a JWT template named `convex`, and set `CLERK_JWT_ISSUER_DOMAIN` in both local and Convex environment settings.
+2. Run `pnpm convex dev` to create/link the Convex project and deploy `convex/schema.ts`.
+3. Create a private R2 bucket named `newlook-production`, allow browser PUT requests from the app origin, and add its S3 credentials.
+4. Add `OPENAI_API_KEY` for the initial GPT Image integration.
+5. Choose a payment provider later; checkout and webhook handling are intentionally deferred.
+
+Never prefix AI, R2, Clerk secret, or payment credentials with `NEXT_PUBLIC_`.
+
+## Checks
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm typecheck
+pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Current foundation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Responsive product landing page and selfie upload experience
+- Clerk-ready sign-in route with an unconfigured development state
+- Validated, user-scoped R2 presigned upload endpoint and verified upload metadata persistence
+- Convex schema covering users, analyses, hairstyles, generations, credits, orders, guides, prompts and model usage
+- Provider-neutral AI and payment interfaces
+- Central identity-preservation prompt
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The canonical product and technical specification is available at [`docs/product-spec-v2.md`](docs/product-spec-v2.md). Current implementation status and the recommended next milestone are tracked in [`docs/current-status.md`](docs/current-status.md).
