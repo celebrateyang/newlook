@@ -9,6 +9,8 @@
  */
 
 import type * as generations from "../generations.js";
+import type * as hairstyleCatalog from "../hairstyleCatalog.js";
+import type * as hairstyles from "../hairstyles.js";
 import type * as uploads from "../uploads.js";
 
 import type {
@@ -19,6 +21,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   generations: typeof generations;
+  hairstyleCatalog: typeof hairstyleCatalog;
+  hairstyles: typeof hairstyles;
   uploads: typeof uploads;
 }>;
 

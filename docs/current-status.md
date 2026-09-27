@@ -25,6 +25,8 @@ Last updated: 2026-09-27
 - Restored the latest saved selfie and most recent completed hairstyle result on the homepage for returning signed-in users, with a direct result link and new-photo reset.
 - Added a guided three-path discovery step after selfie selection: personal AI recommendations, a six-style self-service library with direct try-on, and reference-photo hairstyle transfer.
 - Added private reference-photo upload, two-image GPT Image hairstyle transfer, optional hair-color copying, identity-preserving transfer prompts, and reference-aware result details.
+- Added the first six NewLook-owned, reviewed AI hairstyle catalog previews using two fictional anchor models, consistent salon photography, structured bilingual metadata, and image-led browse and recommendation cards.
+- Reworked the self-service catalog into a compact horizontal thumbnail browser with manual Female/Male collections, defaulting to Female without inferring gender from appearance.
 - Moved image zoom into a full-window viewer and converts downloadable preview images to widely compatible high-quality JPEG files.
 - Added generation lifecycle, result, provider request, duration, and failure persistence in Convex.
 - Kept payments behind an interface; implementation is intentionally deferred.

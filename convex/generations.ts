@@ -1,14 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-
-const catalog = {
-  "soft-layered-cut": { name: "Soft Layered Cut", category: "layers", length: "medium" },
-  "french-bob": { name: "French Bob", category: "bob", length: "chin" },
-  "curtain-bangs": { name: "Curtain Bangs", category: "bangs", length: "medium" },
-  "textured-crop": { name: "Textured Crop", category: "short", length: "short" },
-  "side-part-taper": { name: "Side Part with Taper", category: "short", length: "short" },
-  "short-quiff": { name: "Short Quiff", category: "short", length: "short" },
-} as const;
+import { catalogDocument, hairstyleCatalog } from "./hairstyleCatalog";
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -24,18 +16,15 @@ export const start = mutation({
     if (!user) throw new Error("User profile not found");
     const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
     if (!upload || upload.userId !== user._id) throw new Error("Upload not found");
-    const style = catalog[args.styleSlug as keyof typeof catalog];
+    const style = hairstyleCatalog[args.styleSlug as keyof typeof hairstyleCatalog];
     if (!style) throw new Error("Unsupported hairstyle");
     let hairstyle = await ctx.db.query("hairstyles").withIndex("by_slug", (q) => q.eq("slug", args.styleSlug)).unique();
     if (!hairstyle) {
-      const hairstyleId = await ctx.db.insert("hairstyles", {
-        slug: args.styleSlug, nameEn: style.name, nameZh: style.name, gender: "unisex", category: style.category,
-        length: style.length, texture: ["straight", "wavy", "curly"], maintenanceLevel: "medium",
-        requiresPerm: false, requiresColor: false, minHairLength: "short", recommendedFaceShapes: [],
-        notRecommendedFaceShapes: [], recommendedDensity: [], recommendedTexture: [], referenceImages: [],
-        promptTemplate: args.styleSlug, active: true, createdAt: Date.now(),
-      });
+      const hairstyleId = await ctx.db.insert("hairstyles", { ...catalogDocument(args.styleSlug as keyof typeof hairstyleCatalog), createdAt: Date.now() });
       hairstyle = await ctx.db.get(hairstyleId);
+    } else {
+      await ctx.db.patch(hairstyle._id, { ...catalogDocument(args.styleSlug as keyof typeof hairstyleCatalog), updatedAt: Date.now() });
+      hairstyle = await ctx.db.get(hairstyle._id);
     }
     if (!hairstyle) throw new Error("Could not create hairstyle");
     return await ctx.db.insert("generations", {
