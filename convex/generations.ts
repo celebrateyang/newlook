@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 const catalog = {
@@ -6,6 +6,8 @@ const catalog = {
   "french-bob": { name: "French Bob", category: "bob", length: "chin" },
   "curtain-bangs": { name: "Curtain Bangs", category: "bangs", length: "medium" },
   "textured-crop": { name: "Textured Crop", category: "short", length: "short" },
+  "side-part-taper": { name: "Side Part with Taper", category: "short", length: "short" },
+  "short-quiff": { name: "Short Quiff", category: "short", length: "short" },
 } as const;
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
@@ -44,7 +46,7 @@ export const start = mutation({
 });
 
 export const complete = mutation({
-  args: { generationId: v.id("generations"), r2Keys: v.array(v.string()), durationMs: v.number(), providerRequestId: v.optional(v.string()) },
+  args: { generationId: v.id("generations"), r2Keys: v.array(v.string()), view: v.optional(v.union(v.literal("front"), v.literal("side"))), durationMs: v.number(), providerRequestId: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     const generation = await ctx.db.get(args.generationId);
@@ -52,12 +54,50 @@ export const complete = mutation({
     const user = await ctx.db.get(generation.userId);
     if (!user || user.clerkId !== identity.subject) throw new Error("Generation ownership check failed");
     const createdAt = Date.now();
-    for (const r2Key of args.r2Keys) await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key, selected: false, createdAt });
+    for (const r2Key of args.r2Keys) await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key, view: args.view ?? "front", selected: false, createdAt });
     await ctx.db.insert("modelUsage", {
       userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,
       taskType: "hair_try_on", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
     });
     await ctx.db.patch(args.generationId, { status: "completed", generationTimeMs: args.durationMs, updatedAt: createdAt });
+  },
+});
+
+export const appendSideResult = mutation({
+  args: { generationId: v.id("generations"), uploadKey: v.string(), r2Key: v.string(), durationMs: v.number(), providerRequestId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const identity = await requireIdentity(ctx);
+    const generation = await ctx.db.get(args.generationId);
+    if (!generation) throw new Error("Generation not found");
+    const user = await ctx.db.get(generation.userId);
+    if (!user || user.clerkId !== identity.subject) throw new Error("Generation ownership check failed");
+    const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
+    if (!upload || upload.userId !== user._id || upload.type !== "side") throw new Error("Side upload not found");
+    const existing = await ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect();
+    for (const result of existing.filter((item) => item.view === "side")) await ctx.db.delete(result._id);
+    const createdAt = Date.now();
+    const resultId = await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key: args.r2Key, view: "side", selected: false, createdAt });
+    await ctx.db.insert("modelUsage", {
+      userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,
+      taskType: "hair_try_on_side", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
+    });
+    return resultId;
+  },
+});
+
+export const getMine = query({
+  args: { generationId: v.id("generations") },
+  handler: async (ctx, args) => {
+    const identity = await requireIdentity(ctx);
+    const generation = await ctx.db.get(args.generationId);
+    if (!generation) return null;
+    const user = await ctx.db.get(generation.userId);
+    if (!user || user.clerkId !== identity.subject) return null;
+    const hairstyle = await ctx.db.get(generation.hairstyleId);
+    const upload = await ctx.db.get(generation.uploadId);
+    if (!hairstyle || !upload) return null;
+    const results = await ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect();
+    return { generation, hairstyle, upload, results };
   },
 });
 

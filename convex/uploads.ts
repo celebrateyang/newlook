@@ -9,7 +9,7 @@ async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subje
 
 export const recordCompleted = mutation({
   args: {
-    type: v.union(v.literal("original"), v.literal("reference")),
+    type: v.union(v.literal("original"), v.literal("reference"), v.literal("side")),
     r2Key: v.string(),
     mimeType: v.string(),
     size: v.number(),
@@ -18,8 +18,8 @@ export const recordCompleted = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
-    const expectedFolder = args.type === "original" ? "uploads" : "references";
-    const expectedPrefix = args.type === "original" ? "original" : "reference";
+    const expectedFolder = args.type === "reference" ? "references" : "uploads";
+    const expectedPrefix = args.type;
     const ownedPrefix = `${expectedFolder}/user_${identity.subject}/${expectedPrefix}_`;
     if (!args.r2Key.startsWith(ownedPrefix)) throw new Error("Upload ownership check failed");
 

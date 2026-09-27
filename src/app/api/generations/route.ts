@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       keys.push(key);
     }
     await refreshConvexAuth();
-    await convex.mutation(api.generations.complete, { generationId, r2Keys: keys, durationMs: Date.now() - startedAt, providerRequestId: results[0]?.providerRequestId });
+    await convex.mutation(api.generations.complete, { generationId, r2Keys: keys, view: "front", durationMs: Date.now() - startedAt, providerRequestId: results[0]?.providerRequestId });
     const urls = await Promise.all(keys.map((key) => getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }), { expiresIn: 3600 })));
     return NextResponse.json({ generationId, styleName: style.name, results: urls.map((url, index) => ({ url, key: keys[index] })) });
   } catch (error) {

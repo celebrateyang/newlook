@@ -10,7 +10,7 @@ import { createR2Client } from "@/lib/r2/client";
 export const runtime = "nodejs";
 
 const requestSchema = z.object({
-  type: z.enum(["original", "reference"]),
+  type: z.enum(["original", "reference", "side"]),
   key: z.string().min(1).max(500),
   mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
   size: z.number().int().positive().max(10 * 1024 * 1024),
@@ -19,7 +19,7 @@ const requestSchema = z.object({
 });
 
 const recordCompleted = makeFunctionReference<"mutation", {
-  type: "original" | "reference";
+  type: "original" | "reference" | "side";
   r2Key: string;
   mimeType: string;
   size: number;
@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     const body = requestSchema.safeParse(await request.json().catch(() => null));
     if (!body.success) return NextResponse.json({ error: "Invalid upload metadata" }, { status: 400 });
 
-    const folder = body.data.type === "original" ? "uploads" : "references";
-    const prefix = body.data.type === "original" ? "original" : "reference";
+    const folder = body.data.type === "reference" ? "references" : "uploads";
+    const prefix = body.data.type;
     if (!body.data.key.startsWith(`${folder}/user_${session.userId}/${prefix}_`)) {
       return NextResponse.json({ error: "This upload does not belong to the signed-in user" }, { status: 403 });
     }

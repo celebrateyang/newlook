@@ -1,11 +1,12 @@
 # NewLook Current Status
 
-Last updated: 2026-09-26
+Last updated: 2026-09-27
 
 ## Completed foundation
 
 - Created the standalone Git repository at `D:\code\newlook`.
 - Added a responsive editorial-style marketing homepage.
+- Reworked the landing page into a tool-first advisor workspace with direct selfie upload, an original before/after example, progressive analysis details, and in-place try-on results.
 - Added a local selfie picker with type/size validation and preview.
 - Added About, Pricing, Privacy, Terms, and Clerk-ready sign-in pages.
 - Added a user-scoped R2 presigned upload endpoint.
@@ -17,7 +18,11 @@ Last updated: 2026-09-26
 - Added an upload-completion endpoint that verifies the R2 object's size and MIME type before persisting metadata.
 - Connected and deployed the development Convex backend with Clerk JWT verification.
 - Added the first GPT Image hairstyle try-on provider using the Images edit API.
-- Added four controlled starter styles and a one-image try-on UI after analysis.
+- Added six controlled hairstyle styles and made each ranked recommendation card a direct try-on action.
+- Switched image edits to automatic output sizing and strengthened composition/proportion preservation constraints.
+- Made selfie and try-on comparisons follow the source photo's aspect ratio and use uncropped image fitting so the full hairstyle remains visible.
+- Added authenticated result detail pages with front/side viewing, zoom and fullscreen controls, optional real side-photo generation, structured salon instructions, individual downloads, PDF guides, and ZIP salon packs.
+- Moved image zoom into a full-window viewer and converts downloadable preview images to widely compatible high-quality JPEG files.
 - Added generation lifecycle, result, provider request, duration, and failure persistence in Convex.
 - Kept payments behind an interface; implementation is intentionally deferred.
 - Added `.env.example` and local setup documentation.

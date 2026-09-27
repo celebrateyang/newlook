@@ -1,6 +1,16 @@
 import "server-only";
 import { z } from "zod";
 import { analysisEnv } from "@/lib/env";
+import { STARTER_HAIRSTYLES } from "@/lib/hairstyles/catalog";
+
+const hairstyleSlugs = [
+  "soft-layered-cut",
+  "french-bob",
+  "curtain-bangs",
+  "textured-crop",
+  "side-part-taper",
+  "short-quiff",
+] as const;
 
 export const hairAnalysisSchema = z.object({
   faceShape: z.enum(["oval", "round", "square", "heart", "diamond", "oblong", "unclear"]),
@@ -13,6 +23,7 @@ export const hairAnalysisSchema = z.object({
   hairline: z.enum(["low", "average", "high", "receding", "unclear"]),
   crownVolume: z.enum(["flat", "balanced", "voluminous", "unclear"]),
   recommendations: z.array(z.object({
+    styleSlug: z.enum(hairstyleSlugs),
     name: z.string().min(1),
     matchScore: z.number().int().min(0).max(100),
     reason: z.string().min(1),
@@ -44,12 +55,13 @@ const jsonSchema = {
         type: "object",
         additionalProperties: false,
         properties: {
+          styleSlug: { type: "string", enum: hairstyleSlugs },
           name: { type: "string" },
           matchScore: { type: "integer", minimum: 0, maximum: 100 },
           reason: { type: "string" },
           maintenance: { type: "string", enum: ["low", "medium", "high"] },
         },
-        required: ["name", "matchScore", "reason", "maintenance"],
+        required: ["styleSlug", "name", "matchScore", "reason", "maintenance"],
       },
     },
     disclaimer: { type: "string" },
@@ -70,6 +82,7 @@ function outputText(payload: unknown) {
 export async function analyzeHairImage(bytes: Uint8Array, mimeType: string): Promise<HairAnalysis> {
   const env = analysisEnv();
   const imageUrl = `data:${mimeType};base64,${Buffer.from(bytes).toString("base64")}`;
+  const approvedStyles = STARTER_HAIRSTYLES.map((style) => `${style.slug}: ${style.name} — ${style.prompt}`).join("\n");
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
@@ -79,7 +92,7 @@ export async function analyzeHairImage(bytes: Uint8Array, mimeType: string): Pro
       input: [{
         role: "user",
         content: [
-          { type: "input_text", text: "Analyze only visible face proportions and current hair characteristics for hairstyle advice. Do not infer identity, ethnicity, health, attractiveness, age, or other sensitive traits. If a feature is not visible, use 'unclear'. Recommend exactly three realistic hairstyles and explain each briefly. This is visual styling guidance, not a medical assessment." },
+          { type: "input_text", text: `Analyze only visible face proportions and current hair characteristics for hairstyle advice. Do not infer identity, ethnicity, health, attractiveness, age, or other sensitive traits. If a feature is not visible, use 'unclear'. Recommend exactly three realistic hairstyles from the approved catalog below. Return the exact styleSlug and name shown in the catalog, rank them by fit, and explain each briefly. Do not recommend a style outside this catalog. This is visual styling guidance, not a medical assessment.\n\nApproved catalog:\n${approvedStyles}` },
           { type: "input_image", image_url: imageUrl, detail: "high" },
         ],
       }],

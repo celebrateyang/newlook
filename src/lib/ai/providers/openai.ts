@@ -25,7 +25,7 @@ export class OpenAIImageEditProvider implements ImageEditProvider {
     form.append("image[]", filePart(params.sourceImage), params.sourceImage.filename);
     if (params.referenceImage) form.append("image[]", filePart(params.referenceImage), params.referenceImage.filename);
     form.append("n", String(Math.min(Math.max(params.count, 1), 4)));
-    form.append("size", "1024x1536");
+    form.append("size", "auto");
     form.append("quality", "low");
     form.append("output_format", "webp");
 
