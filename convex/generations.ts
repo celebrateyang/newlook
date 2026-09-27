@@ -45,8 +45,40 @@ export const start = mutation({
   },
 });
 
+export const startReference = mutation({
+  args: { uploadKey: v.string(), referenceUploadKey: v.string(), provider: v.string(), model: v.string(), promptVersion: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await requireIdentity(ctx);
+    const user = await ctx.db.query("users").withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)).unique();
+    if (!user) throw new Error("User profile not found");
+    const [upload, referenceUpload] = await Promise.all([
+      ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique(),
+      ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.referenceUploadKey)).unique(),
+    ]);
+    if (!upload || upload.userId !== user._id || upload.type !== "original") throw new Error("Source upload not found");
+    if (!referenceUpload || referenceUpload.userId !== user._id || referenceUpload.type !== "reference") throw new Error("Reference upload not found");
+
+    let hairstyle = await ctx.db.query("hairstyles").withIndex("by_slug", (q) => q.eq("slug", "reference-transfer")).unique();
+    if (!hairstyle) {
+      const hairstyleId = await ctx.db.insert("hairstyles", {
+        slug: "reference-transfer", nameEn: "Reference Hairstyle", nameZh: "参考发型", gender: "unisex", category: "reference",
+        length: "custom", texture: [], maintenanceLevel: "medium", requiresPerm: false, requiresColor: false,
+        minHairLength: "custom", recommendedFaceShapes: [], notRecommendedFaceShapes: [], recommendedDensity: [],
+        recommendedTexture: [], referenceImages: [], promptTemplate: "reference-transfer", active: true, createdAt: Date.now(),
+      });
+      hairstyle = await ctx.db.get(hairstyleId);
+    }
+    if (!hairstyle) throw new Error("Could not create reference hairstyle");
+    return await ctx.db.insert("generations", {
+      userId: user._id, uploadId: upload._id, hairstyleId: hairstyle._id, referenceUploadId: referenceUpload._id,
+      provider: args.provider, model: args.model, promptVersion: args.promptVersion, status: "processing", creditsUsed: 0,
+      createdAt: Date.now(),
+    });
+  },
+});
+
 export const complete = mutation({
-  args: { generationId: v.id("generations"), r2Keys: v.array(v.string()), view: v.optional(v.union(v.literal("front"), v.literal("side"))), durationMs: v.number(), providerRequestId: v.optional(v.string()) },
+  args: { generationId: v.id("generations"), r2Keys: v.array(v.string()), view: v.optional(v.union(v.literal("front"), v.literal("side"))), durationMs: v.number(), providerRequestId: v.optional(v.string()), taskType: v.optional(v.union(v.literal("hair_try_on"), v.literal("reference_transfer"))) },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     const generation = await ctx.db.get(args.generationId);
@@ -57,7 +89,7 @@ export const complete = mutation({
     for (const r2Key of args.r2Keys) await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key, view: args.view ?? "front", selected: false, createdAt });
     await ctx.db.insert("modelUsage", {
       userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,
-      taskType: "hair_try_on", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
+      taskType: args.taskType ?? "hair_try_on", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
     });
     await ctx.db.patch(args.generationId, { status: "completed", generationTimeMs: args.durationMs, updatedAt: createdAt });
   },
@@ -96,8 +128,12 @@ export const getMine = query({
     const hairstyle = await ctx.db.get(generation.hairstyleId);
     const upload = await ctx.db.get(generation.uploadId);
     if (!hairstyle || !upload) return null;
-    const results = await ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect();
-    return { generation, hairstyle, upload, results };
+    const [results, referenceUpload] = await Promise.all([
+      ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect(),
+      generation.referenceUploadId ? ctx.db.get(generation.referenceUploadId) : Promise.resolve(null),
+    ]);
+    if (referenceUpload && referenceUpload.userId !== user._id) return null;
+    return { generation, hairstyle, upload, referenceUpload, results };
   },
 });
 
@@ -140,7 +176,7 @@ export const latestMine = query({
 });
 
 export const fail = mutation({
-  args: { generationId: v.id("generations"), durationMs: v.number(), errorCode: v.string() },
+  args: { generationId: v.id("generations"), durationMs: v.number(), errorCode: v.string(), taskType: v.optional(v.union(v.literal("hair_try_on"), v.literal("reference_transfer"))) },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     const generation = await ctx.db.get(args.generationId);
@@ -150,7 +186,7 @@ export const fail = mutation({
     const now = Date.now();
     await ctx.db.insert("modelUsage", {
       userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,
-      taskType: "hair_try_on", durationMs: args.durationMs, status: "failed", createdAt: now,
+      taskType: args.taskType ?? "hair_try_on", durationMs: args.durationMs, status: "failed", createdAt: now,
     });
     await ctx.db.patch(args.generationId, { status: "failed", generationTimeMs: args.durationMs, errorCode: args.errorCode, updatedAt: now });
   },

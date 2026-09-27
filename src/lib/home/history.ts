@@ -10,6 +10,8 @@ import { createR2Client } from "@/lib/r2/client";
 
 export type HomeHistory = {
   sourceUrl: string;
+  sourceKey: string;
+  sourceMimeType: "image/jpeg" | "image/png" | "image/webp";
   sourceWidth?: number;
   sourceHeight?: number;
   resultUrl?: string;
@@ -46,6 +48,8 @@ export async function getHomeHistory(): Promise<HomeHistory | undefined> {
 
   return {
     sourceUrl,
+    sourceKey: history.upload.r2Key,
+    sourceMimeType: history.upload.mimeType as HomeHistory["sourceMimeType"],
     sourceWidth: history.upload.width,
     sourceHeight: history.upload.height,
     resultUrl,

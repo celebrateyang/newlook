@@ -21,11 +21,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
       view: result.view ?? "front",
       url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: result.r2Key }), { expiresIn: 3600 }),
     })));
+    const reference = owned.data.referenceUpload ? {
+      url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: owned.data.referenceUpload.r2Key }), { expiresIn: 3600 }),
+    } : undefined;
     return NextResponse.json({
       generationId,
       status: owned.data.generation.status,
       style: { slug: owned.data.hairstyle.slug, name: owned.data.hairstyle.nameEn },
       source: { width: owned.data.upload.width, height: owned.data.upload.height },
+      reference,
       views,
       guide: getSalonGuide(owned.data.hairstyle.slug),
     });

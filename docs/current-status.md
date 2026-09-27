@@ -23,6 +23,8 @@ Last updated: 2026-09-27
 - Made selfie and try-on comparisons follow the source photo's aspect ratio and use uncropped image fitting so the full hairstyle remains visible.
 - Added authenticated result detail pages with front/side viewing, zoom and fullscreen controls, optional real side-photo generation, structured salon instructions, individual downloads, PDF guides, and ZIP salon packs.
 - Restored the latest saved selfie and most recent completed hairstyle result on the homepage for returning signed-in users, with a direct result link and new-photo reset.
+- Added a guided three-path discovery step after selfie selection: personal AI recommendations, a six-style self-service library with direct try-on, and reference-photo hairstyle transfer.
+- Added private reference-photo upload, two-image GPT Image hairstyle transfer, optional hair-color copying, identity-preserving transfer prompts, and reference-aware result details.
 - Moved image zoom into a full-window viewer and converts downloadable preview images to widely compatible high-quality JPEG files.
 - Added generation lifecycle, result, provider request, duration, and failure persistence in Convex.
 - Kept payments behind an interface; implementation is intentionally deferred.
