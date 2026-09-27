@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Camera, Check, CheckCircle2, ImagePlus, LoaderCircle, LockKeyhole, RotateCcw, Sparkles } from "lucide-react";
 import type { HairAnalysis } from "@/lib/ai/hair-analysis";
 import { STARTER_HAIRSTYLES, type StarterHairstyleSlug } from "@/lib/hairstyles/catalog";
+import type { HomeHistory } from "@/lib/home/history";
 
 const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxBytes = 10 * 1024 * 1024;
@@ -19,20 +20,33 @@ async function responseError(response: Response, fallback: string) {
   return `${fallback} (${response.status})`;
 }
 
-export function SelfieUploader() {
+export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistory }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const selectedFileRef = useRef<File | undefined>(undefined);
   const [file, setFile] = useState<File>();
-  const [preview, setPreview] = useState<string>();
-  const [imageAspectRatio, setImageAspectRatio] = useState(4 / 5);
+  const [preview, setPreview] = useState<string | undefined>(initialHistory?.sourceUrl);
+  const [imageAspectRatio, setImageAspectRatio] = useState(
+    initialHistory?.sourceWidth && initialHistory.sourceHeight
+      ? initialHistory.sourceWidth / initialHistory.sourceHeight
+      : 4 / 5,
+  );
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number }>();
   const [error, setError] = useState<string>();
   const [stage, setStage] = useState<Stage>("idle");
   const [analysis, setAnalysis] = useState<HairAnalysis>();
   const [uploadedKey, setUploadedKey] = useState<string>();
   const [generatingStyle, setGeneratingStyle] = useState<StarterHairstyleSlug>();
-  const [generatedResult, setGeneratedResult] = useState<{ url: string; styleName: string; styleSlug: StarterHairstyleSlug; generationId: string }>();
+  const [generatedResult, setGeneratedResult] = useState<{ url: string; styleName: string; styleSlug?: StarterHairstyleSlug; generationId: string } | undefined>(
+    initialHistory?.resultUrl && initialHistory.generationId
+      ? {
+          url: initialHistory.resultUrl,
+          styleName: initialHistory.styleName ?? "Your latest hairstyle",
+          styleSlug: STARTER_HAIRSTYLES.find((style) => style.slug === initialHistory.styleSlug)?.slug,
+          generationId: initialHistory.generationId,
+        }
+      : undefined,
+  );
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -116,11 +130,11 @@ export function SelfieUploader() {
     <input ref={inputRef} type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => choose(event.target.files?.[0])} />
     <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
       <div id="try-on-preview" className="scroll-mt-4 rounded-[1.6rem] bg-white p-4 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-5">
-        <div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">Step 1</p><h2 className="mt-1 text-lg font-bold">Upload one clear selfie</h2></div>{preview && <button onClick={reset} disabled={busy} type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> Replace</button>}</div>
+        <div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">{preview && !file ? "Your latest photo" : "Step 1"}</p><h2 className="mt-1 text-lg font-bold">{preview && !file ? "Continue with your saved selfie" : "Upload one clear selfie"}</h2></div>{preview && <button onClick={reset} disabled={busy} type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> {file ? "Replace" : "Use a new photo"}</button>}</div>
         {preview ? <div className="relative overflow-hidden rounded-[1.2rem] bg-ink/[.06]" style={{ aspectRatio: imageAspectRatio }}><Image src={preview} alt="Selected selfie preview" fill className="object-contain object-center" unoptimized /></div> : <button type="button" onClick={() => inputRef.current?.click()} onDrop={(event) => { event.preventDefault(); choose(event.dataTransfer.files[0]); }} onDragOver={(event) => event.preventDefault()} className="group flex min-h-80 w-full flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-ink/20 bg-clay/35 px-5 text-center transition hover:border-coral hover:bg-clay/60 lg:min-h-[360px]">
           <span className="mb-5 grid size-16 place-items-center rounded-full bg-coral text-white transition group-hover:scale-105"><ImagePlus className="size-7" /></span><span className="text-lg font-bold">Choose your photo</span><span className="mt-2 text-sm text-ink/50">or drop it here</span><span className="mt-5 text-xs text-ink/40">JPG, PNG or WebP · Max 10 MB</span>
         </button>}
-        {preview && <button className="button-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={busy || stage === "complete"} onClick={analyze}>{busy ? <LoaderCircle className="size-4 animate-spin" /> : stage === "complete" ? <CheckCircle2 className="size-4" /> : <Sparkles className="size-4" />}{stage === "complete" ? "Analysis complete" : status}</button>}
+        {file && preview && <button className="button-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60" type="button" disabled={busy || stage === "complete"} onClick={analyze}>{busy ? <LoaderCircle className="size-4 animate-spin" /> : stage === "complete" ? <CheckCircle2 className="size-4" /> : <Sparkles className="size-4" />}{stage === "complete" ? "Analysis complete" : status}</button>}
         {!preview && <div className="mt-4 grid gap-2 text-xs text-ink/55"><span className="inline-flex items-center gap-2"><Check className="size-3.5 text-deep-sage" /> Face and hair clearly visible</span><span className="inline-flex items-center gap-2"><Check className="size-3.5 text-deep-sage" /> Front-facing, natural light, no filter</span></div>}
       </div>
 

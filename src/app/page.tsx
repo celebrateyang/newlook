@@ -1,16 +1,23 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArrowRight, Check, Scissors, ShieldCheck, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SelfieUploader } from "@/components/upload/selfie-uploader";
+import { getHomeHistory } from "@/lib/home/history";
 
-export default function Home() {
+export default async function Home() {
+  await connection();
+  const history = await getHomeHistory().catch((error) => {
+    console.error("Could not load homepage history", error);
+    return undefined;
+  });
   return <main className="min-h-screen overflow-hidden bg-ivory text-ink" id="top">
     <SiteHeader />
     <section className="relative px-5 pb-16 pt-5 sm:px-8 lg:px-12 lg:pb-20 lg:pt-6">
       <div className="sun-glow" />
       <div className="relative mx-auto max-w-7xl">
         <div className="mx-auto max-w-6xl text-center"><p className="eyebrow mb-2">AI HAIRSTYLE ADVISOR</p><h1 className="font-display text-[clamp(2.4rem,4vw,4rem)] leading-[.95] tracking-[-.05em]">Find a hairstyle that <em className="font-normal text-coral">actually suits you.</em></h1><p className="mx-auto mt-2 max-w-2xl text-base leading-7 text-ink/60">Upload one selfie to get personal matches, realistic try-ons, and salon-ready guidance.</p><div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-xs text-ink/50"><span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-deep-sage" /> One free preview</span><span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-deep-sage" /> Private by default</span><span className="inline-flex items-center gap-1.5"><Sparkles className="size-3.5 text-deep-sage" /> About one minute</span></div></div>
-        <div className="mt-5"><SelfieUploader /></div>
+        <div className="mt-5"><SelfieUploader initialHistory={history} /></div>
       </div>
     </section>
     <section className="bg-ink px-5 py-7 text-ivory sm:px-8 lg:px-12"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row sm:items-center"><p className="font-display text-2xl tracking-tight">Not more choices. Better reasons.</p><div className="flex flex-wrap gap-x-7 gap-y-2 text-sm text-ivory/60"><span>Face + hair analysis</span><span>Realistic try-on</span><span>Salon-ready plan</span></div></div></section>

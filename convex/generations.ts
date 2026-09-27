@@ -101,6 +101,44 @@ export const getMine = query({
   },
 });
 
+export const latestMine = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireIdentity(ctx);
+    const user = await ctx.db.query("users").withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)).unique();
+    if (!user) return null;
+
+    const latestGeneration = await ctx.db
+      .query("generations")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .filter((q) => q.eq(q.field("status"), "completed"))
+      .first();
+
+    if (latestGeneration) {
+      const [upload, hairstyle, results] = await Promise.all([
+        ctx.db.get(latestGeneration.uploadId),
+        ctx.db.get(latestGeneration.hairstyleId),
+        ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", latestGeneration._id)).collect(),
+      ]);
+      const frontResults = results.filter((result) => (result.view ?? "front") === "front");
+      const result = frontResults.find((item) => item.selected)
+        ?? frontResults.sort((a, b) => b.createdAt - a.createdAt)[0];
+      if (upload?.userId === user._id && upload.type === "original") {
+        return { generation: latestGeneration, upload, hairstyle, result };
+      }
+    }
+
+    const upload = await ctx.db
+      .query("uploads")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .filter((q) => q.eq(q.field("type"), "original"))
+      .first();
+    return upload ? { upload } : null;
+  },
+});
+
 export const fail = mutation({
   args: { generationId: v.id("generations"), durationMs: v.number(), errorCode: v.string() },
   handler: async (ctx, args) => {
