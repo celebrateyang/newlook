@@ -10,6 +10,8 @@
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--ivory); color:var(--ink); font-family:var(--font-sans),sans-serif; }
 a,button { -webkit-tap-highlight-color:transparent; }
+:where(a[href],button:not(:disabled),summary,label[for],input:not(:disabled)[type="checkbox"],input:not(:disabled)[type="radio"],select:not(:disabled),[role="button"]:not([aria-disabled="true"])) { cursor:pointer; }
+:where(button:disabled,input:disabled,select:disabled,[aria-disabled="true"]) { cursor:not-allowed; }
 .eyebrow { font-family:var(--font-mono),monospace; font-size:.72rem; font-weight:500; letter-spacing:.19em; color:color-mix(in srgb,var(--ink) 52%,transparent); }
 .button-primary,.button-secondary { display:inline-flex; min-height:3.25rem; align-items:center; justify-content:center; gap:.65rem; border-radius:999px; padding:.85rem 1.5rem; font-size:.9rem; font-weight:700; transition:.2s ease; }
 .button-primary { background:var(--ink); color:var(--ivory); }
