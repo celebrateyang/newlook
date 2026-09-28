@@ -1,6 +1,8 @@
-# NewLook
+# newself
 
-NewLook is an AI hairstyle advisor: it analyses a person's face and current hair, recommends suitable styles, visualises the result, evaluates whether it is achievable in real life, and produces a salon-ready guide.
+newself is an AI hairstyle advisor: it analyses a person's face and current hair, recommends suitable styles, visualises the result, evaluates whether it is achievable in real life, and produces a salon-ready guide.
+
+Official site: [newself.cc](https://newself.cc)
 
 ## Stack
 

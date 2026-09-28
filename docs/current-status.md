@@ -1,9 +1,10 @@
-# NewLook Current Status
+# newself Current Status
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28
 
 ## Completed foundation
 
+- Confirmed `newself` as the official brand and `newself.cc` as the production domain.
 - Created the standalone Git repository at `D:\code\newlook`.
 - Added a responsive editorial-style marketing homepage.
 - Reworked the landing page into a tool-first advisor workspace with direct selfie upload, an original before/after example, progressive analysis details, and in-place try-on results.
@@ -25,7 +26,7 @@ Last updated: 2026-09-27
 - Restored the latest saved selfie and most recent completed hairstyle result on the homepage for returning signed-in users, with a direct result link and new-photo reset.
 - Added a guided three-path discovery step after selfie selection: personal AI recommendations, a six-style self-service library with direct try-on, and reference-photo hairstyle transfer.
 - Added private reference-photo upload, two-image GPT Image hairstyle transfer, optional hair-color copying, identity-preserving transfer prompts, and reference-aware result details.
-- Added the first six NewLook-owned, reviewed AI hairstyle catalog previews using two fictional anchor models, consistent salon photography, structured bilingual metadata, and image-led browse and recommendation cards.
+- Added the first six newself-owned, reviewed AI hairstyle catalog previews using two fictional anchor models, consistent salon photography, structured bilingual metadata, and image-led browse and recommendation cards.
 - Reworked the self-service catalog into a compact horizontal thumbnail browser with manual Female/Male collections, defaulting to Female without inferring gender from appearance.
 - Reworked the signed-in homepage into a compact returning-user workspace with immediately visible latest photos, an optional hide control, a clear continue action, and direct latest-result access.
 - Rebalanced discovery around one primary recommendation path plus compact library/reference alternatives, with persistent method switching and clearer generation time/preview-cost cues.

@@ -19,5 +19,5 @@ export async function getOwnedGeneration(generationId: string) {
 }
 
 export function safeFilename(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "newlook-result";
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "newself-result";
 }

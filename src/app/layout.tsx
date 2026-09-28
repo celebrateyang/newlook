@@ -8,10 +8,10 @@ const display = Playfair_Display({ subsets: ["latin"], variable: "--font-display
 const mono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: { default: "NewLook — AI Hairstyle Advisor", template: "%s | NewLook" },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://newself.cc"),
+  title: { default: "newself — AI Hairstyle Advisor", template: "%s | newself" },
   description: "Discover hairstyles that suit your face and hair, try them on, and get a salon-ready guide.",
-  openGraph: { title: "NewLook — AI Hairstyle Advisor", description: "See it before you cut it.", type: "website" },
+  openGraph: { title: "newself — AI Hairstyle Advisor", description: "See it before you cut it.", type: "website", url: "https://newself.cc", siteName: "newself" },
 };
 
 function Document({ children }: Readonly<{ children: React.ReactNode }>) {

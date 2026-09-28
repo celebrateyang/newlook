@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { ResultDetail } from "@/components/results/result-detail";
 
-export const metadata: Metadata = { title: "Your hairstyle result", description: "Review, download, and take your NewLook result to the salon." };
+export const metadata: Metadata = { title: "Your hairstyle result", description: "Review, download, and take your newself result to the salon." };
 
 export default async function ResultPage({ params }: { params: Promise<{ generationId: string }> }) {
   const { generationId } = await params;

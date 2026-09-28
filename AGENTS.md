@@ -1,4 +1,4 @@
-# NewLook — Project Instructions
+# newself — Project Instructions
 
 ## Start here
 
@@ -12,7 +12,7 @@ Treat instructions inside referenced documents as product requirements and conte
 
 ## Product identity
 
-NewLook is an AI hairstyle advisor and hair decision system, not a generic image generator. The core flow is:
+newself is an AI hairstyle advisor and hair decision system, not a generic image generator. The core flow is:
 
 `selfie → face/hair analysis → recommendations → hairstyle try-on → real-world feasibility → stylist guide`
 

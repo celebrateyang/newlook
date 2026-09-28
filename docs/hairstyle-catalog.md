@@ -1,6 +1,6 @@
 # Hairstyle catalog production
 
-The catalog is a NewLook-owned set of reviewed AI preview assets. Do not copy or hotlink competitor imagery.
+The catalog is a newself-owned set of reviewed AI preview assets. Do not copy or hotlink competitor imagery.
 
 ## Pilot standard
 

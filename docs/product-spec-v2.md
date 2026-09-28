@@ -1,7 +1,8 @@
-# NewLook AI 发型顾问 — 产品与技术设计说明书
+# newself AI 发型顾问 — 产品与技术设计说明书
 
 版本：V2.0  
-产品暂定名：NewLook / 焕新  
+正式品牌名：newself
+正式域名：newself.cc
 产品定位：AI 发型顾问 + 发型试戴 + 现实可实现性分析 + 理发师执行指南  
 产品形态：Web First  
 目标市场：全球市场，优先英语用户，同时支持中文及多语言
@@ -10,13 +11,13 @@
 
 # 1. 产品定位
 
-NewLook 不是普通的“AI 换发型”工具。
+newself 不是普通的“AI 换发型”工具。
 
 普通产品流程：
 
 上传照片 → 选择发型 → AI 生成图片
 
-NewLook 的核心目标：
+newself 的核心目标：
 
 帮助用户找到真正适合自己的发型，并确保推荐的发型在现实中能够被理发师实现。
 
@@ -47,7 +48,7 @@ NewLook 的核心目标：
 
 # 2. 与 Gemini / ChatGPT 直接生成发型的差异
 
-NewLook 不能只是大模型 Wrapper。
+newself 不能只是大模型 Wrapper。
 
 必须提供完整工作流：
 
@@ -742,7 +743,7 @@ Copy Hair Color
 
 # 22. Reality Feasibility
 
-这是 NewLook 最关键的差异化。
+这是 newself 最关键的差异化。
 
 每个生成结果必须分析：
 
@@ -1215,7 +1216,7 @@ private
 
 固定产品描述：
 
-> NewLook is an AI hairstyle advisor that helps people discover hairstyles that suit their face and hair, virtually try them on, and create salon-ready haircut instructions.
+> newself is an AI hairstyle advisor that helps people discover hairstyles that suit their face and hair, virtually try them on, and create salon-ready haircut instructions.
 
 不要频繁改变品牌定位描述。
 
@@ -1584,7 +1585,7 @@ Coding Agent 必须遵守：
 
 # 51. 最终一句话
 
-NewLook 是：
+newself 是：
 
 > 一个帮助用户找到真正适合自己的发型、提前看到真实效果，并把可执行方案直接交给理发师的 AI 发型顾问。
 

@@ -29,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
   const zip = createZip(files);
   return new Response(Buffer.from(zip), { headers: {
     "Content-Type": "application/zip",
-    "Content-Disposition": `attachment; filename="newlook-${safeFilename(owned.data.hairstyle.nameEn)}.zip"`,
+    "Content-Disposition": `attachment; filename="newself-${safeFilename(owned.data.hairstyle.nameEn)}.zip"`,
     "Cache-Control": "private, no-store",
   } });
 }

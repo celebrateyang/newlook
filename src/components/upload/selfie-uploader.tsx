@@ -19,11 +19,14 @@ type DiscoveryMode = "choose" | "recommend" | "browse" | "reference";
 function readCachedAnalysis(uploadKey?: string) {
   if (!uploadKey) return undefined;
   try {
-    const raw = sessionStorage.getItem(`newlook:analysis:${uploadKey}`);
+    const cacheKey = `newself:analysis:${uploadKey}`;
+    const legacyCacheKey = `newlook:analysis:${uploadKey}`;
+    const raw = sessionStorage.getItem(cacheKey) ?? sessionStorage.getItem(legacyCacheKey);
     if (!raw) return undefined;
     const cached = JSON.parse(raw) as { expiresAt?: number; analysis?: HairAnalysis };
     if (!cached.expiresAt || cached.expiresAt <= Date.now() || !cached.analysis?.recommendations?.length) {
-      sessionStorage.removeItem(`newlook:analysis:${uploadKey}`);
+      sessionStorage.removeItem(cacheKey);
+      sessionStorage.removeItem(legacyCacheKey);
       return undefined;
     }
     return cached.analysis;
@@ -34,7 +37,7 @@ function readCachedAnalysis(uploadKey?: string) {
 
 function cacheAnalysis(uploadKey: string, analysis: HairAnalysis) {
   try {
-    sessionStorage.setItem(`newlook:analysis:${uploadKey}`, JSON.stringify({ expiresAt: Date.now() + analysisCacheLifetimeMs, analysis }));
+    sessionStorage.setItem(`newself:analysis:${uploadKey}`, JSON.stringify({ expiresAt: Date.now() + analysisCacheLifetimeMs, analysis }));
   } catch {
     // Recommendation rendering should still work when browser storage is unavailable.
   }
@@ -302,7 +305,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
         <div>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-coral">{generationInProgress ? "Creating your preview" : returningUser ? "Welcome back" : "Your current look"}</p>
           <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight sm:text-4xl">{generationInProgress ? `Generating ${pendingStyleName}` : generatedResult ? generatedResult.styleName : "Continue with your saved selfie"}</h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generationInProgress ? "NewLook is changing only the hairstyle while preserving your face, expression, clothes and background." : generatedResult ? "Your latest preview is ready. Keep exploring with the same selfie or open the full result." : "Your selfie is ready. Choose how you want to find your next hairstyle."}</p>
+          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generationInProgress ? "newself is changing only the hairstyle while preserving your face, expression, clothes and background." : generatedResult ? "Your latest preview is ready. Keep exploring with the same selfie or open the full result." : "Your selfie is ready. Choose how you want to find your next hairstyle."}</p>
           <div className="mt-5 flex flex-wrap gap-2">
             {generationInProgress ? <span role="status" aria-live="polite" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-5 text-sm font-bold text-white"><LoaderCircle className="size-4 animate-spin" /> Generating preview…</span> : <button type="button" onClick={scrollToChoices} className="button-primary">Continue exploring <ArrowRight className="size-4" /></button>}
             {generatedResult && !generationInProgress && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="button-secondary">View full result</button>}
@@ -406,7 +409,7 @@ function ReferenceTransferPanel({ preview, copyHairColor, busy, status, onChoose
         {preview && <button type="button" disabled={busy} onClick={onChoose} className="button-secondary mt-3 w-full disabled:opacity-50"><RotateCcw className="size-4" /> Replace reference</button>}
       </div>
       <div className="flex flex-col rounded-2xl bg-clay/35 p-5 sm:p-6">
-        <p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">What NewLook transfers</p>
+        <p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">What newself transfers</p>
         <ul className="mt-4 space-y-3 text-sm leading-6 text-ink/65"><li className="flex gap-2"><Check className="mt-1 size-4 shrink-0 text-deep-sage" /> Silhouette, length, bangs, layering, parting, volume and texture</li><li className="flex gap-2"><Check className="mt-1 size-4 shrink-0 text-deep-sage" /> Your face, expression, body, clothes and background stay unchanged</li><li className="flex gap-2"><Check className="mt-1 size-4 shrink-0 text-deep-sage" /> The person in the reference photo is never copied</li></ul>
         <label className="mt-6 flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-ink/10 bg-white p-4"><span><span className="block text-sm font-bold">Copy hair color</span><span className="mt-1 block text-xs leading-5 text-ink/45">Off by default. Leave this off to keep your current color.</span></span><input type="checkbox" checked={copyHairColor} disabled={busy} onChange={(event) => onCopyHairColor(event.target.checked)} className="size-5 accent-coral" /></label>
         <button type="button" disabled={!preview || busy} onClick={onGenerate} className="button-primary mt-auto w-full disabled:cursor-not-allowed disabled:opacity-50">{busy ? <LoaderCircle className="size-4 animate-spin" /> : <Sparkles className="size-4" />}{status ?? "Try this reference hairstyle"}</button>

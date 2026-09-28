@@ -18,7 +18,7 @@ function wrap(value: string, width = 82) {
 }
 
 export function createSalonGuidePdf(styleName: string, guide: SalonGuide) {
-  const commands: string[] = ["BT", "/F1 21 Tf", "54 742 Td", `(${escapePdfText(styleName)}) Tj`, "0 -28 Td", "/F1 10 Tf", "(NEWLOOK SALON GUIDE) Tj"];
+  const commands: string[] = ["BT", "/F1 21 Tf", "54 742 Td", `(${escapePdfText(styleName)}) Tj`, "0 -28 Td", "/F1 10 Tf", "(NEWSELF SALON GUIDE) Tj"];
   let currentY = 714;
   const addBlock = (heading: string, copy: string) => {
     commands.push(`0 -${currentY === 714 ? 30 : 18} Td`, "/F1 12 Tf", `(${escapePdfText(heading)}) Tj`, "0 -16 Td", "/F1 9 Tf");
