@@ -8,7 +8,7 @@ export interface SalonGuide {
   maintenanceWeeks: number;
 }
 
-const guides: Record<StarterHairstyleSlug, SalonGuide> = {
+const guides: Partial<Record<StarterHairstyleSlug, SalonGuide>> = {
   "soft-layered-cut": {
     overview: "Soft, face-framing layers with balanced movement and no harsh disconnection.",
     feasibility: "Best when there is enough length around the face to create visible graduation without thinning the perimeter.",
@@ -78,5 +78,17 @@ const guides: Record<StarterHairstyleSlug, SalonGuide> = {
 };
 
 export function getSalonGuide(slug: string) {
-  return guides[slug as StarterHairstyleSlug];
+  return guides[slug as StarterHairstyleSlug] ?? {
+    overview: "Use the preview as a direction for silhouette, length, movement, and finish rather than as a rigid template.",
+    feasibility: "A stylist should adapt the shape to the client's current length, density, texture, growth pattern, and daily styling routine.",
+    instructions: [
+      { label: "Consultation", detail: "Confirm the target length, maintenance level, and which visual details matter most before cutting." },
+      { label: "Silhouette", detail: "Match the overall outline first, then adapt internal layers to the client's natural density and texture." },
+      { label: "Face frame", detail: "Place the shortest face-framing point only after checking natural fall, shrinkage, and preferred parting." },
+      { label: "Texture", detail: "Refine on dry hair and avoid removing more density than the target silhouette requires." },
+      { label: "Styling", detail: "Ask the stylist to demonstrate a repeatable finish using the client's usual tools and products." },
+    ],
+    dailyStylingMinutes: 8,
+    maintenanceWeeks: 6,
+  };
 }
