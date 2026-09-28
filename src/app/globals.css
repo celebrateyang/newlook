@@ -9,6 +9,14 @@
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--ivory); color:var(--ink); font-family:var(--font-sans),sans-serif; }
+@keyframes generation-progress { 0% { transform:translateX(-125%); } 55% { transform:translateX(75%); } 100% { transform:translateX(225%); } }
+.generation-progress { animation:generation-progress 2.2s ease-in-out infinite; }
+@keyframes result-mobile-sheen { 0%,58% { transform:translateX(0) rotate(12deg); opacity:0; } 64% { opacity:.75; } 78% { transform:translateX(520%) rotate(12deg); opacity:0; } 100% { transform:translateX(520%) rotate(12deg); opacity:0; } }
+@keyframes result-mobile-cue { 0%,72%,100% { transform:translateY(0) scale(1); box-shadow:0 8px 24px rgba(232,102,80,.28); } 78% { transform:translateY(-3px) scale(1.025); box-shadow:0 12px 30px rgba(232,102,80,.48); } 84% { transform:translateY(0) scale(1); box-shadow:0 8px 24px rgba(232,102,80,.28); } 90% { transform:translateY(-1px) scale(1.01); } }
+@media (max-width:639px) and (prefers-reduced-motion:no-preference) {
+  .result-mobile-sheen { animation:result-mobile-sheen 4.8s ease-in-out infinite; }
+  .result-mobile-cue { animation:result-mobile-cue 4.8s ease-in-out infinite; }
+}
 a,button { -webkit-tap-highlight-color:transparent; }
 :where(a[href],button:not(:disabled),summary,label[for],input:not(:disabled)[type="checkbox"],input:not(:disabled)[type="radio"],select:not(:disabled),[role="button"]:not([aria-disabled="true"])) { cursor:pointer; }
 :where(button:disabled,input:disabled,select:disabled,[aria-disabled="true"]) { cursor:not-allowed; }

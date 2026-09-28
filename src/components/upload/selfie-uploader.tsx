@@ -5,7 +5,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Camera, Check, CheckCircle2, Eye, EyeOff, ImagePlus, ImageUp, LayoutGrid, LoaderCircle, LockKeyhole, RotateCcw, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Check, CheckCircle2, Eye, EyeOff, ImagePlus, ImageUp, LayoutGrid, LoaderCircle, LockKeyhole, RotateCcw, Sparkles, ZoomIn } from "lucide-react";
 import type { HairAnalysis } from "@/lib/ai/hair-analysis";
 import { STARTER_HAIRSTYLES, type StarterHairstyleSlug } from "@/lib/hairstyles/catalog";
 import type { HomeHistory } from "@/lib/home/history";
@@ -73,7 +73,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   const [copyHairColor, setCopyHairColor] = useState(false);
   const [referenceBusy, setReferenceBusy] = useState(false);
   const [referenceStatus, setReferenceStatus] = useState<string>();
-  const [photosVisible, setPhotosVisible] = useState(!initialHistory?.sourceUrl);
+  const [photosVisible, setPhotosVisible] = useState(true);
   const [generatedResult, setGeneratedResult] = useState<{ url: string; styleName: string; styleSlug?: StarterHairstyleSlug; generationId: string } | undefined>(
     initialHistory?.resultUrl && initialHistory.generationId
       ? {
@@ -115,6 +115,30 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
     setPhotosVisible(true);
     if (inputRef.current) inputRef.current.value = "";
     if (referenceInputRef.current) referenceInputRef.current.value = "";
+  }
+
+  function restoreSavedLook() {
+    if (!initialHistory) return;
+    if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
+    selectedFileRef.current = undefined;
+    setFile(undefined);
+    setPreview(initialHistory.sourceUrl);
+    setImageAspectRatio(initialHistory.sourceWidth && initialHistory.sourceHeight ? initialHistory.sourceWidth / initialHistory.sourceHeight : 4 / 5);
+    setImageDimensions(initialHistory.sourceWidth && initialHistory.sourceHeight ? { width: initialHistory.sourceWidth, height: initialHistory.sourceHeight } : undefined);
+    setUploadedKey(initialHistory.sourceKey);
+    setSourceMimeType(initialHistory.sourceMimeType);
+    setGeneratedResult(initialHistory.resultUrl && initialHistory.generationId ? {
+      url: initialHistory.resultUrl,
+      styleName: initialHistory.styleName ?? "Your latest hairstyle",
+      styleSlug: STARTER_HAIRSTYLES.find((style) => style.slug === initialHistory.styleSlug)?.slug,
+      generationId: initialHistory.generationId,
+    } : undefined);
+    setAnalysis(undefined);
+    setMode("choose");
+    setError(undefined);
+    setStage("idle");
+    setPhotosVisible(true);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   function chooseReference(next?: File) {
@@ -206,7 +230,8 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
 
   async function generateReference() {
     if (!uploadedKey || !referenceFile || referenceBusy) return;
-    setError(undefined); setReferenceBusy(true); setGeneratedResult(undefined);
+    setError(undefined); setReferenceBusy(true);
+    requestAnimationFrame(() => document.getElementById("try-on-preview")?.scrollIntoView({ behavior: "smooth", block: "center" }));
     try {
       let referenceUploadKey = referenceUploadedKey;
       if (!referenceUploadKey) {
@@ -243,7 +268,8 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
 
   async function generate(styleSlug: StarterHairstyleSlug) {
     if (!uploadedKey || generatingStyle) return;
-    setError(undefined); setGeneratedResult(undefined); setGeneratingStyle(styleSlug);
+    setError(undefined); setGeneratingStyle(styleSlug);
+    requestAnimationFrame(() => document.getElementById("try-on-preview")?.scrollIntoView({ behavior: "smooth", block: "center" }));
     try {
       const response = await fetch("/api/generations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uploadKey: uploadedKey, styleSlug }) });
       if (!response.ok) throw new Error(await responseError(response, "Generation failed"));
@@ -262,7 +288,10 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   const busy = stage !== "idle" && stage !== "complete";
   const status = stage === "authorizing" ? "Preparing your upload…" : stage === "uploading" ? "Uploading privately…" : stage === "saving" ? "Securing your photo…" : stage === "analyzing" ? "Finding your best matches…" : undefined;
   const returningUser = Boolean(initialHistory?.sourceUrl && !file);
-  const compactWorkspace = Boolean(preview && (returningUser || generatedResult));
+  const generationInProgress = Boolean(generatingStyle || referenceBusy);
+  const workspaceBusy = busy || generationInProgress;
+  const pendingStyleName = generatingStyle ? STARTER_HAIRSTYLES.find((style) => style.slug === generatingStyle)?.name ?? "hairstyle" : "reference hairstyle";
+  const compactWorkspace = Boolean(preview && (returningUser || generatedResult || generationInProgress));
   const scrollToChoices = () => document.getElementById("discovery-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return <section aria-label="Hairstyle advisor" className="advisor-workspace">
@@ -271,34 +300,56 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
     {compactWorkspace ? <div id="try-on-preview" className="scroll-mt-4 rounded-[1.6rem] bg-white p-5 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-7">
       <div className="grid gap-5 lg:grid-cols-[.72fr_1.28fr] lg:items-center">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[.15em] text-coral">{returningUser ? "Welcome back" : "Your current look"}</p>
-          <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight sm:text-4xl">{generatedResult ? generatedResult.styleName : "Continue with your saved selfie"}</h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generatedResult ? "Your latest preview is ready. Keep exploring with the same selfie or open the full result." : "Your selfie is ready. Choose how you want to find your next hairstyle."}</p>
+          <p className="text-xs font-bold uppercase tracking-[.15em] text-coral">{generationInProgress ? "Creating your preview" : returningUser ? "Welcome back" : "Your current look"}</p>
+          <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight sm:text-4xl">{generationInProgress ? `Generating ${pendingStyleName}` : generatedResult ? generatedResult.styleName : "Continue with your saved selfie"}</h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generationInProgress ? "NewLook is changing only the hairstyle while preserving your face, expression, clothes and background." : generatedResult ? "Your latest preview is ready. Keep exploring with the same selfie or open the full result." : "Your selfie is ready. Choose how you want to find your next hairstyle."}</p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" onClick={scrollToChoices} className="button-primary">Continue exploring <ArrowRight className="size-4" /></button>
-            {generatedResult && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="button-secondary">View full result</button>}
+            {generationInProgress ? <span role="status" aria-live="polite" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-5 text-sm font-bold text-white"><LoaderCircle className="size-4 animate-spin" /> Generating preview…</span> : <button type="button" onClick={scrollToChoices} className="button-primary">Continue exploring <ArrowRight className="size-4" /></button>}
+            {generatedResult && !generationInProgress && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="button-secondary">View full result</button>}
           </div>
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs font-bold text-ink/50">
             <button type="button" onClick={() => setPhotosVisible((visible) => !visible)} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink">{photosVisible ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />} {photosVisible ? "Hide photos" : "Reveal photos"}</button>
-            <button type="button" onClick={reset} disabled={busy} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> Change selfie</button>
+            <button type="button" onClick={reset} disabled={workspaceBusy} className="inline-flex items-center gap-1.5 transition-colors hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> Change selfie</button>
           </div>
           <p className="mt-4 inline-flex items-center gap-1.5 text-xs leading-5 text-ink/40"><LockKeyhole className="size-3.5 shrink-0" /> Stored privately and shown only through signed access.</p>
         </div>
-        <div className={`relative grid overflow-hidden rounded-[1.25rem] bg-ink/[.06] ${generatedResult ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`relative grid overflow-hidden rounded-[1.25rem] bg-ink/[.06] ${generatedResult || generationInProgress ? "grid-cols-2" : "grid-cols-1"}`}>
           <div className="relative aspect-[4/3] overflow-hidden" aria-label="Original selfie">
             {preview && <Image src={preview} alt="Original selfie" fill className={`object-contain object-center transition duration-300 ${photosVisible ? "" : "scale-105 blur-xl"}`} unoptimized />}
             <ImageLabel>Original</ImageLabel>
           </div>
-          {generatedResult && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="group relative aspect-[4/3] cursor-zoom-in overflow-hidden border-l border-white/70" aria-label={`Open ${generatedResult.styleName} result`}>
-            <img src={generatedResult.url} alt={`${generatedResult.styleName} hairstyle preview`} className={`size-full object-contain object-center transition duration-300 ${photosVisible ? "" : "scale-105 blur-xl"}`} />
+          {generationInProgress ? <div className="relative aspect-[4/3] overflow-hidden border-l border-white/70 bg-clay" role="status" aria-live="polite" aria-label={`Generating ${pendingStyleName} preview`}>
+            {generatedResult && <img src={generatedResult.url} alt="" className="size-full scale-105 object-contain object-center opacity-20 blur-md" />}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(242,222,163,.75),rgba(233,223,211,.92)_58%,rgba(247,244,237,.98))]" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+              <span className="grid size-12 place-items-center rounded-full bg-coral text-white shadow-[0_12px_30px_rgba(232,102,80,.3)]"><LoaderCircle className="size-6 animate-spin" /></span>
+              <span className="mt-3 rounded-full bg-white/80 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.16em] text-coral shadow-sm">AI is working</span>
+              <p className="mt-2 font-display text-lg leading-tight text-ink sm:text-2xl">Creating {pendingStyleName}</p>
+              <p className="mt-1 hidden max-w-xs text-xs leading-5 text-ink/50 sm:block">Preserving your identity and applying only the hairstyle.</p>
+              <div className="mt-3 h-1.5 w-3/4 max-w-56 overflow-hidden rounded-full bg-white/80"><span className="generation-progress block h-full w-1/2 rounded-full bg-coral" /></div>
+              <p className="mt-2 text-[10px] font-semibold text-ink/40">Usually about one minute</p>
+            </div>
+            <ImageLabel>Generating</ImageLabel>
+          </div> : generatedResult && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="group relative aspect-[4/3] cursor-zoom-in overflow-hidden border-l border-white/70 focus-visible:outline-none" aria-label={`Open ${generatedResult.styleName} full result with zoom, comparison and salon details`}>
+            <img src={generatedResult.url} alt={`${generatedResult.styleName} hairstyle preview`} className={`size-full object-contain object-center transition duration-500 ease-out group-hover:scale-[1.035] group-focus-visible:scale-[1.035] ${photosVisible ? "" : "scale-105 blur-xl"}`} />
+            <span className="result-mobile-sheen pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/45 to-transparent sm:hidden" />
+            <span className="result-mobile-cue pointer-events-none absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-2 text-[10px] font-bold text-white shadow-[0_8px_24px_rgba(232,102,80,.35)] sm:hidden"><ZoomIn className="size-3.5" /> Tap to explore</span>
+            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/15 to-transparent opacity-0 transition duration-300 group-hover:opacity-100 group-focus-visible:opacity-100" />
+            <span className="pointer-events-none absolute inset-2 rounded-[.9rem] border border-white/0 transition duration-300 group-hover:border-coral/80 group-hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,.35)] group-focus-visible:border-coral/80" />
+            <span className="pointer-events-none absolute inset-0 flex translate-y-3 flex-col items-center justify-center px-3 text-center text-white opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+              <span className="grid size-11 place-items-center rounded-full bg-white/95 text-coral shadow-[0_12px_30px_rgba(37,35,31,.25)]"><ZoomIn className="size-5" /></span>
+              <span className="mt-3 text-sm font-bold sm:text-base">Open full result</span>
+              <span className="mt-1 hidden text-[10px] font-medium text-white/75 sm:block">Zoom · Compare · Salon details</span>
+            </span>
             <ImageLabel>Latest result</ImageLabel>
           </button>}
-          {!photosVisible && <button type="button" onClick={() => setPhotosVisible(true)} className="absolute inset-0 z-10 m-auto h-fit w-fit rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-ink shadow-lg"><Eye className="mr-1.5 inline size-3.5" /> Reveal photos</button>}
+          {!photosVisible && !generationInProgress && <button type="button" onClick={() => setPhotosVisible(true)} className="absolute inset-0 z-10 m-auto h-fit w-fit rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-ink shadow-lg"><Eye className="mr-1.5 inline size-3.5" /> Reveal photos</button>}
         </div>
       </div>
     </div> : <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
       <div id="try-on-preview" className="scroll-mt-4 rounded-[1.6rem] bg-white p-4 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-5">
-        <div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">{preview && !file ? "Your latest photo" : "Step 1"}</p><h2 className="mt-1 text-lg font-bold">{preview && !file ? "Continue with your saved selfie" : "Upload one clear selfie"}</h2></div>{preview && <button onClick={reset} disabled={busy} type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> {file ? "Replace" : "Use a new photo"}</button>}</div>
+        <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">{preview && !file ? "Your latest photo" : "Step 1"}</p><h2 className="mt-1 text-lg font-bold">{preview && !file ? "Continue with your saved selfie" : initialHistory ? "Upload a new selfie" : "Upload one clear selfie"}</h2></div>{preview ? <button onClick={reset} disabled={busy} type="button" className="inline-flex items-center gap-1.5 text-xs font-bold text-ink/50 hover:text-ink disabled:opacity-50"><RotateCcw className="size-3.5" /> {file ? "Replace" : "Use a new photo"}</button> : initialHistory && <button onClick={restoreSavedLook} type="button" className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ink/15 px-3 py-2 text-xs font-bold text-ink/60 transition hover:border-coral hover:text-coral"><ArrowLeft className="size-3.5" /> Back to saved look</button>}</div>
+        {!preview && initialHistory && <div className="mb-4 flex items-start gap-3 rounded-xl bg-sage/10 px-4 py-3 text-sm leading-6 text-ink/60"><ArrowLeft className="mt-1 size-4 shrink-0 text-deep-sage" /><p>Changed your mind? Return to your saved selfie and latest result without uploading again.</p></div>}
         {preview ? <div className="relative overflow-hidden rounded-[1.2rem] bg-ink/[.06]" style={{ aspectRatio: imageAspectRatio }}><Image src={preview} alt="Selected selfie preview" fill className="object-contain object-center" unoptimized /></div> : <button type="button" onClick={() => inputRef.current?.click()} onDrop={(event) => { event.preventDefault(); choose(event.dataTransfer.files[0]); }} onDragOver={(event) => event.preventDefault()} className="group flex min-h-80 w-full flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-ink/20 bg-clay/35 px-5 text-center transition hover:border-coral hover:bg-clay/60 lg:min-h-[360px]">
           <span className="mb-5 grid size-16 place-items-center rounded-full bg-coral text-white transition group-hover:scale-105"><ImagePlus className="size-7" /></span><span className="text-lg font-bold">Choose your photo</span><span className="mt-2 text-sm text-ink/50">or drop it here</span><span className="mt-5 text-xs text-ink/40">JPG, PNG or WebP · Max 10 MB</span>
         </button>}

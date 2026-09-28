@@ -27,11 +27,15 @@ Last updated: 2026-09-27
 - Added private reference-photo upload, two-image GPT Image hairstyle transfer, optional hair-color copying, identity-preserving transfer prompts, and reference-aware result details.
 - Added the first six NewLook-owned, reviewed AI hairstyle catalog previews using two fictional anchor models, consistent salon photography, structured bilingual metadata, and image-led browse and recommendation cards.
 - Reworked the self-service catalog into a compact horizontal thumbnail browser with manual Female/Male collections, defaulting to Female without inferring gender from appearance.
-- Reworked the signed-in homepage into a compact returning-user workspace with privacy-blurred latest photos, a clear continue action, and direct latest-result access.
+- Reworked the signed-in homepage into a compact returning-user workspace with immediately visible latest photos, an optional hide control, a clear continue action, and direct latest-result access.
 - Rebalanced discovery around one primary recommendation path plus compact library/reference alternatives, with persistent method switching and clearer generation time/preview-cost cues.
 - Reduced mobile image repetition by combining the current selfie and latest result into a side-by-side summary, and added signed-in header shortcuts plus explicit upload labels.
 - Cached completed recommendations per selfie in component state and session storage, so switching discovery methods or returning within the same browser session does not repeat the analysis call; added an immediate accessible loading panel and skeleton cards while analysis runs.
 - Standardized pointer, unavailable, wait, and zoom cursor feedback across interactive controls, and strengthened hover feedback on the discovery method switcher.
+- Added a reversible change-selfie flow for returning users: after opening the new-photo picker they can restore the saved selfie, latest result, upload association, and cached recommendations without uploading again.
+- Turned the main result workspace into an active generation stage: generation scrolls into view immediately, preserves the prior result beneath a branded progress treatment, communicates identity preservation and expected time, then swaps in the new result in place.
+- Added a polished hover and keyboard-focus treatment to the latest-result image with zoom affordance, coral focus framing, and a clear route to comparison and salon details.
+- Added a mobile-only latest-result affordance with a gently animated "Tap to explore" cue and periodic light sweep, while respecting reduced-motion preferences.
 - Moved image zoom into a full-window viewer and converts downloadable preview images to widely compatible high-quality JPEG files.
 - Added generation lifecycle, result, provider request, duration, and failure persistence in Convex.
 - Kept payments behind an interface; implementation is intentionally deferred.
