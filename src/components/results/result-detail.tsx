@@ -117,7 +117,11 @@ export function ResultDetail({ generationId }: { generationId: string }) {
   const hasSide = data.views.some((view) => view.view === "side");
   const isReferenceTransfer = Boolean(data.reference);
   return <><div className="mx-auto max-w-7xl px-5 pb-20 pt-8 sm:px-8 lg:px-12">
-    <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><Link href="/" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink/45 hover:text-ink"><ArrowLeft className="size-4" /> Back to recommendations</Link><p className="eyebrow mb-2 mt-7">YOUR SELECTED LOOK</p><h1 className="font-display text-4xl tracking-tight sm:text-5xl">{data.style.name}</h1></div>{!isReferenceTransfer && <a href={`/api/generations/${generationId}/bundle`} className="button-primary"><Package className="size-4" /> Download salon pack</a>}</div>
+    <div className="flex flex-col gap-5 lg:flex-row lg:items-end">
+      <Link href="/#discovery-heading" className="order-1 inline-flex w-fit items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink/45 transition hover:text-ink focus-visible:text-ink lg:order-2 lg:mb-3 lg:ml-auto"><ArrowLeft className="size-4" /> Back to styles</Link>
+      <div className="order-2 lg:order-1"><p className="eyebrow mb-2">YOUR SELECTED LOOK</p><h1 className="font-display text-4xl tracking-tight sm:text-5xl">{data.style.name}</h1></div>
+      {!isReferenceTransfer && <a href={`/api/generations/${generationId}/bundle`} className="button-primary order-3 lg:mb-0 lg:ml-3"><Package className="size-4" /> Download salon pack</a>}
+    </div>
     {error && <p role="alert" className="mt-5 rounded-xl bg-butter/60 px-4 py-3 text-sm text-ink/70">{error}</p>}
 
     <div className="mt-7 grid gap-6 lg:grid-cols-[1.35fr_.65fr]">
