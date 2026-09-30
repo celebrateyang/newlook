@@ -90,6 +90,14 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
 
   useEffect(() => () => { if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => () => { if (referencePreview?.startsWith("blob:")) URL.revokeObjectURL(referencePreview); }, [referencePreview]);
+  useEffect(() => {
+    if (!file || !preview || mode !== "choose") return;
+    const timer = window.setTimeout(() => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.getElementById("discovery-heading")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [file, mode, preview]);
   function choose(next?: File) {
     setError(undefined); setAnalysis(undefined); setMode("choose"); setUploadedKey(undefined); setSourceMimeType(undefined); setGeneratedResult(undefined); setStage("idle");
     if (!next) return;
