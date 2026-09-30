@@ -26,7 +26,8 @@ export class OpenAIImageEditProvider implements ImageEditProvider {
     if (params.referenceImage) form.append("image[]", filePart(params.referenceImage), params.referenceImage.filename);
     form.append("n", String(Math.min(Math.max(params.count, 1), 4)));
     form.append("size", "auto");
-    form.append("quality", "low");
+    form.append("quality", "high");
+    form.append("input_fidelity", "high");
     form.append("output_format", "webp");
 
     const response = await fetch("https://api.openai.com/v1/images/edits", {

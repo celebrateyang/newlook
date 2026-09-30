@@ -1,6 +1,6 @@
 import { IDENTITY_PRESERVATION } from "./identity";
 
-export const REFERENCE_TRANSFER_PROMPT_VERSION = "reference-transfer-v1";
+export const REFERENCE_TRANSFER_PROMPT_VERSION = "reference-transfer-v2-high-fidelity";
 
 export function buildReferenceTransferPrompt(copyHairColor: boolean) {
   const colorInstruction = copyHairColor
