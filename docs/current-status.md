@@ -81,6 +81,16 @@ Verify the signed-in end-to-end try-on with a real selfie. Then persist face/hai
 - Localized AI analysis prompts and structured salon instructions. Analysis session caches are separated by locale. PDF guides and ZIP salon packs currently retain English guide text; Chinese download buttons state this explicitly.
 - Local checks cover language preference, route preservation, translations, guide dimensions and AI prompt constraints, alongside the existing generation/sharing regression suite. Signed-in generation and social-platform integration still require real end-to-end verification.
 
+## Hairstyle gallery and comparison ratings — 2026-10-02
+
+- Added owner-only, paginated saved hairstyle galleries at `/en/looks` and `/zh/looks`, including front and side outputs. The header now links to this gallery.
+- Added selection of 2–6 saved outputs, optional question text, public comparison pages, 1–5 ratings per image, average scores and rankings, and owner-controlled revocation. Public responses expose only explicitly selected outputs; selfies, reference photos and account details stay private.
+- Added 1200×630 collage previews with A–F image labels, Open Graph/X metadata, native sharing, WeChat copy-link, post-text copying, Facebook link sharing and X message/link prefill. Facebook post text must be pasted manually.
+- Replaced sign-in requirements for the Web rating UI with anonymous voting, including existing single-image links. Server-issued HMAC proofs prevent direct unsigned anonymous mutations. Browser identifiers are signed HttpOnly cookies; authenticated voters use their account identity. Scores can be edited without adding another rating. Anonymous device/cookie changes can allow repeat participation, so this is an informal choice aid.
+- Added atomic limits of 20 rating requests per visitor and 60 per network per minute across sharing pages, short-lived signed proofs, same-origin POST checks, hashed network identifiers, and daily cleanup of expired rate-limit records. Updated privacy disclosures in both languages.
+- Verification: all 28 tests passed, covering ownership, selection validation, signed voting, edits, concurrent aggregates, limits, revocation and collage dimensions. Local English/Chinese gallery routes returned 200; unauthenticated owner APIs returned 401; invalid public pages/images returned 404. Collage layout was visually inspected. Real development Convex verified a Node-generated HMAC proof; no real signed-in user vote or social-platform publish/preview has been verified.
+- Development Convex schema/functions and the matching local/development `SHARING_SIGNING_SECRET` are configured. This feature has not been published to Vercel or the production Convex deployment. Production requires the same server-only signing secret in both services, Convex deployment first, then Web deployment. See README for setup. This section supersedes the earlier absence of a history gallery and the earlier sign-in-only rating requirement.
+
 ## Environment
 
 Copy `.env.example` to `.env.local`. Never commit `.env.local` or paste secret values into chat messages.

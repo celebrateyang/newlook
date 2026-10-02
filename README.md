@@ -37,6 +37,16 @@ Web deployment does not deploy Convex functions. Before releasing Web code that 
 
 Use `pnpm convex function-spec` (development) or `pnpm convex function-spec --prod` to inspect deployed functions. The side-view flow requires `generations:startSide` and `generations:appendSideResult`; a missing starter causes immediate failure before AI generation.
 
+## Saved hairstyles and comparison sharing
+
+`/en/looks` and `/zh/looks` show the signed-in owner's saved front and side results, with pagination. Select 2–6 images to create a public comparison page. Friends can rate each image from 1–5 without signing in; the page shows averages and a ranking. Owners can disable the link. Only explicitly selected generated images and their collage become public.
+
+Anonymous ratings use a signed HttpOnly browser cookie. Returning visitors can edit their scores, but clearing cookies or changing devices can allow another vote. These are informal friend ratings, not verified unique-person votes. Signed-in owners cannot rate their own sharing pages.
+
+Before deploying this feature, configure the same server-only `SHARING_SIGNING_SECRET` (at least 32 random characters) in the Web environment and its matching Convex deployment. The local development secret is in `.env.local`; never publish it or prefix it with `NEXT_PUBLIC_`. Set the production value securely in Vercel and Convex, deploy Convex first, then publish the Web app. Avoid piping the value through tools that append a newline: both services must receive the exact same value.
+
+X sharing pre-fills the message and link. Facebook shares the link preview; its message must be pasted by the user. WeChat uses copy-link or native sharing. Social previews use a 1200×630 collage; actual platform caching and preview fetching still need live verification. Revocation blocks future app access but cannot recall saved or externally cached copies.
+
 ## Languages
 
 English and Simplified Chinese are available at `/en` and `/zh`. The header language selector preserves the current page and remembers the choice. Unprefixed page links select the saved language, then the browser language; API and asset paths remain unchanged.

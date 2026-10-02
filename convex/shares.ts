@@ -1,6 +1,7 @@
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { voteProof, verifyVote, limitVote } from "./anonymousVotes";
 
 async function ownedResult(ctx: QueryCtx | MutationCtx, resultId: Id<"generationResults">) {
   const identity = await ctx.auth.getUserIdentity();
@@ -80,5 +81,39 @@ export const rate = mutation({
     const total = share.ratingTotal - (previous?.score ?? 0) + args.score;
     await ctx.db.patch(share._id, { ratingCount: count, ratingTotal: total, updatedAt: Date.now() });
     return { count, average: total / count, score: args.score };
+  },
+});
+
+export const rateAnonymous = mutation({
+  args: { proof: voteProof },
+  handler: async (ctx, { proof }) => {
+    await verifyVote(proof);
+    if (proof.kind !== "single" || proof.index !== 0) throw new ConvexError({ code: "INVALID_VOTE" });
+    const share = await ctx.db.query("resultShares").withIndex("by_token", q => q.eq("token", proof.token)).unique();
+    if (!share?.active) throw new ConvexError({ code: "SHARE_UNAVAILABLE" });
+    const owner = await ctx.db.get(share.userId);
+    if (proof.accountId && proof.accountId === owner?.clerkId) throw new ConvexError({ code: "SELF_VOTE" });
+    const result = await ctx.db.get(share.generationResultId);
+    const generation = result ? await ctx.db.get(result.generationId) : null;
+    if (!generation || generation.status !== "completed" || generation.userId !== share.userId) throw new ConvexError({ code: "SHARE_UNAVAILABLE" });
+    await limitVote(ctx, proof);
+    const previous = await ctx.db.query("shareRatings").withIndex("by_share_voter", q => q.eq("shareId", share._id).eq("voterId", proof.voterId)).unique();
+    if (previous) await ctx.db.patch(previous._id, { score: proof.score, updatedAt: Date.now() });
+    else await ctx.db.insert("shareRatings", { shareId: share._id, voterId: proof.voterId, score: proof.score, createdAt: Date.now() });
+    const count = share.ratingCount + (previous ? 0 : 1), total = share.ratingTotal - (previous?.score ?? 0) + proof.score;
+    await ctx.db.patch(share._id, { ratingCount: count, ratingTotal: total, updatedAt: Date.now() });
+    return { count, average: total / count, score: proof.score };
+  },
+});
+
+export const myAnonymousRating = query({
+  args: { proof: voteProof },
+  handler: async (ctx, { proof }) => {
+    await verifyVote(proof);
+    if (proof.kind !== "single") throw new ConvexError({ code: "INVALID_VOTE" });
+    const share = await ctx.db.query("resultShares").withIndex("by_token", q => q.eq("token", proof.token)).unique();
+    if (!share?.active) return null;
+    const row = await ctx.db.query("shareRatings").withIndex("by_share_voter", q => q.eq("shareId", share._id).eq("voterId", proof.voterId)).unique();
+    return row?.score ?? null;
   },
 });

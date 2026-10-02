@@ -4,6 +4,9 @@ import { v } from "convex/values";
 const timestamp = { createdAt: v.number(), updatedAt: v.optional(v.number()) };
 
 export default defineSchema({
+  hairstylePolls: defineTable({ userId: v.id("users"), token: v.string(), active: v.boolean(), title: v.string(), resultIds: v.array(v.id("generationResults")), totals: v.array(v.number()), counts: v.array(v.number()), ...timestamp }).index("by_token", ["token"]).index("by_user", ["userId"]),
+  pollRatings: defineTable({ pollId: v.id("hairstylePolls"), voterId: v.string(), scores: v.array(v.number()), ...timestamp }).index("by_poll_voter", ["pollId", "voterId"]),
+  ratingLimits: defineTable({ key: v.string(), windowStart: v.number(), used: v.number() }).index("by_key", ["key"]).index("by_window", ["windowStart"]),
   generationQuotas: defineTable({ userId: v.id("users"), dayStart: v.number(), used: v.number() }).index("by_user_day", ["userId", "dayStart"]),
   resultShares: defineTable({ userId: v.id("users"), generationResultId: v.id("generationResults"), token: v.string(), active: v.boolean(), ratingCount: v.number(), ratingTotal: v.number(), ...timestamp }).index("by_token", ["token"]).index("by_result", ["generationResultId"]),
   shareRatings: defineTable({ shareId: v.id("resultShares"), voterId: v.string(), score: v.number(), ...timestamp }).index("by_share_voter", ["shareId", "voterId"]),

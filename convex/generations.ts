@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { catalogDocument, hairstyleCatalog } from "./hairstyleCatalog";
 import { DAILY_GENERATION_LIMIT, quotaDay, readQuota, reserveGeneration } from "./generationQuota";
+import { paginationOptsValidator } from "convex/server";
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -189,6 +190,22 @@ export const latestMine = query({
       .filter((q) => q.eq(q.field("type"), "original"))
       .first();
     return upload ? { upload } : null;
+  },
+});
+
+export const historyMine = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const identity = await requireIdentity(ctx);
+    const user = await ctx.db.query("users").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique();
+    if (!user) return { page: [], isDone: true, continueCursor: "" };
+    const page = await ctx.db.query("generations").withIndex("by_user", q => q.eq("userId", user._id)).order("desc").filter(q => q.eq(q.field("status"), "completed")).paginate(args.paginationOpts);
+    const entries = await Promise.all(page.page.map(async generation => {
+      const style = await ctx.db.get(generation.hairstyleId);
+      const results = await ctx.db.query("generationResults").withIndex("by_generation", q => q.eq("generationId", generation._id)).collect();
+      return results.filter(result => result.r2Key.startsWith(`generations/user_${user.clerkId}/gen_${generation._id}_`)).map(result => ({ resultId: result._id, generationId: generation._id, r2Key: result.r2Key, name: style?.nameEn ?? "Hairstyle", nameZh: style?.nameZh ?? "发型", view: result.view ?? "front", createdAt: result.createdAt }));
+    }));
+    return { ...page, page: entries.flat() };
   },
 });
 
