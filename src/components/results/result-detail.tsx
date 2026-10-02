@@ -44,6 +44,7 @@ export function ResultDetail({ generationId }: { generationId: string }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sideBusy, setSideBusy] = useState(false);
+  const [sideStatus, setSideStatus] = useState("");
   const [error, setError] = useState<string>();
 
   const fetchResult = useCallback(async () => {
@@ -52,11 +53,6 @@ export function ResultDetail({ generationId }: { generationId: string }) {
     if (!response.ok) throw new Error(await errorMessage(response, t("Could not load this result")));
     return await response.json() as ResultData;
   }, [generationId, router, t, fetch]);
-
-  const load = useCallback(async () => {
-    const result = await fetchResult();
-    if (result) setData(result);
-  }, [fetchResult]);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +89,7 @@ export function ResultDetail({ generationId }: { generationId: string }) {
     if (!acceptedTypes.includes(file.type)) return setError(t("Choose a JPG, PNG or WebP side photo."));
     if (file.size > maxBytes) return setError(t("The side photo must be smaller than 10 MB."));
     setSideBusy(true);
+    setSideStatus("Uploading your side photo…");
     try {
       const bitmap = await createImageBitmap(file);
       const dimensions = { width: bitmap.width, height: bitmap.height };
@@ -104,14 +101,20 @@ export function ResultDetail({ generationId }: { generationId: string }) {
       if (!uploaded.ok) throw new Error(t("The side photo could not be uploaded. Check the R2 CORS policy."));
       const completed = await fetch("/api/uploads/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "side", key: upload.key, mimeType: file.type, size: file.size, ...dimensions }) });
       if (!completed.ok) throw new Error(await errorMessage(completed, t("Could not save the side photo")));
+      setSideStatus("Applying your hairstyle to the side photo. This usually takes about a minute…");
       const generated = await fetch(`/api/generations/${generationId}/side`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uploadKey: upload.key }) });
       if (!generated.ok) throw new Error(await errorMessage(generated, t("Could not generate the side preview")));
-      await load();
-      setActiveView("side"); setZoom(1);
+      const result = await generated.json() as ResultView;
+      if (!result.id || result.view !== "side" || !result.url) throw new Error(t("The image provider returned no side result"));
+      // The POST already saved the result. Display its response without a second
+      // request that could fail after a successful, quota-consuming generation.
+      setData(current => current ? { ...current, views: [...current.views.filter(view => view.view !== "side"), result] } : current);
+      setActiveView("side"); setZoom(1); setPan({ x: 0, y: 0 });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("Could not create the side preview"));
     } finally {
       setSideBusy(false);
+      setSideStatus("");
       if (sideInputRef.current) sideInputRef.current.value = "";
     }
   }
@@ -137,8 +140,9 @@ export function ResultDetail({ generationId }: { generationId: string }) {
 
         {active && <ShareControls key={active.id} generationId={generationId} resultId={active.id} />}
         {!isReferenceTransfer && <div className="mt-6 border-t border-ink/10 pt-6">
-          <input ref={sideInputRef} type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => void addSidePhoto(event.target.files?.[0])} />
+          <input ref={sideInputRef} type="file" aria-label={t("Upload a real side photo")} accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => void addSidePhoto(event.target.files?.[0])} />
           <div className="flex flex-col justify-between gap-4 rounded-2xl bg-clay/45 p-5 sm:flex-row sm:items-center"><div><p className="font-bold">{hasSide ? t("Replace the side view") : t("Add an accurate side view")}</p><p className="mt-1 max-w-xl text-sm leading-6 text-ink/50">{t("Upload a real side photo and we’ll apply this hairstyle from the same angle. Optional, but more useful for your stylist.")}</p></div><button type="button" disabled={sideBusy} onClick={() => sideInputRef.current?.click()} className="button-secondary shrink-0 disabled:cursor-wait disabled:opacity-60">{sideBusy ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}{sideBusy ? t("Creating side view…") : hasSide ? t("Replace photo") : t("Add side photo")}</button></div>
+          {sideBusy && <p role="status" aria-live="polite" className="mt-3 flex items-center gap-2 text-sm leading-6 text-ink/60"><LoaderCircle className="size-4 shrink-0 animate-spin" />{t(sideStatus)}</p>}
         </div>}
       </section>
 

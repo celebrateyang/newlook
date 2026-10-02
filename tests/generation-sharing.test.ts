@@ -93,6 +93,25 @@ test("quota resets at Beijing midnight and includes same-day legacy generations"
   expect(await owner.query(api.generations.quotaMine, {})).toMatchObject({ remaining: 5 });
 });
 
+test("saved side results survive reload and replacement preserves the front view", async () => {
+  const { owner, other, generationId, resultId } = await savedResult();
+  const sideArgs = { generationId, uploadKey: "side-key", durationMs: 100 };
+  const firstKey = `generations/user_owner/gen_${generationId}_side_first.webp`;
+  await expect(other.mutation(api.generations.appendSideResult, { ...sideArgs, r2Key: firstKey })).rejects.toThrow("ownership");
+  await owner.mutation(api.generations.startSide, { generationId, uploadKey: "side-key" });
+  await owner.mutation(api.generations.appendSideResult, { ...sideArgs, r2Key: firstKey });
+  const firstReload = await owner.query(api.generations.getMine, { generationId });
+  expect(firstReload!.results.find(result => result.view === "side")?.r2Key).toBe(firstKey);
+  const replacementKey = `generations/user_owner/gen_${generationId}_side_replacement.webp`;
+  await owner.mutation(api.generations.startSide, { generationId, uploadKey: "side-key" });
+  const replacementId = await owner.mutation(api.generations.appendSideResult, { ...sideArgs, r2Key: replacementKey });
+  const reload = await owner.query(api.generations.getMine, { generationId });
+  expect(reload!.results).toHaveLength(2);
+  expect(reload!.results.find(result => result.view === "front")?._id).toBe(resultId);
+  expect(reload!.results.find(result => result.view === "side")).toMatchObject({ _id: replacementId, r2Key: replacementKey });
+  expect(await owner.query(api.generations.quotaMine, {})).toMatchObject({ used: 3 });
+});
+
 test("sharing requires ownership, exposes only output and revokes old tokens", async () => {
   const { t, owner, other, resultId } = await savedResult();
   const token = "a".repeat(48);

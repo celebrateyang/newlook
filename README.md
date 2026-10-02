@@ -31,6 +31,12 @@ The marketing site can render before credentials are configured. Authentication,
 
 Never prefix AI, R2, Clerk secret, or payment credentials with `NEXT_PUBLIC_`.
 
+## Deploying backend changes
+
+Web deployment does not deploy Convex functions. Before releasing Web code that calls new Convex functions, run `pnpm convex dev --once` for the development backend and `pnpm convex deploy` for production. Confirm that Vercel's `NEXT_PUBLIC_CONVEX_URL` points to the intended deployment and that its `CLERK_JWT_ISSUER_DOMAIN` matches the Web Clerk instance.
+
+Use `pnpm convex function-spec` (development) or `pnpm convex function-spec --prod` to inspect deployed functions. The side-view flow requires `generations:startSide` and `generations:appendSideResult`; a missing starter causes immediate failure before AI generation.
+
 ## Languages
 
 English and Simplified Chinese are available at `/en` and `/zh`. The header language selector preserves the current page and remembers the choice. Unprefixed page links select the saved language, then the browser language; API and asset paths remain unchanged.

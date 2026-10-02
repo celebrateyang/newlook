@@ -53,6 +53,11 @@ Last updated: 2026-10-02
 
 ## Verification already completed
 
+- Live deployment diagnosis: both linked Convex dev and production deployments lacked `generations:startSide` while the Web side endpoint calls it before AI generation. Synchronized the current backend to both deployments after a schema/index dry run (no index deletions), including quota and sharing functions. Added `convex/tsconfig.json` so deployments run strict backend typechecking. Confirmed the required functions are present after deployment. This removes the missing-function failure; a real signed-in side-image generation remains to be verified. The local Web progress/diagnostic improvements have not been deployed to Vercel.
+
+- Side-view follow-up: the result page now shows upload/generation progress and displays the saved side image directly from the POST response, avoiding an extra read as a prerequisite for display. Regression coverage confirms side results survive reload, replacement preserves the front result, ownership is enforced, and quota is charged. The reported browser failure has not yet been reproduced; real side-photo generation still needs end-to-end verification.
+- Side API diagnostics now distinguish authentication, configuration, quota reservation, source loading, AI generation, image storage, database save and preview-signing failures with safe localized messages and a request ID in server logs/responses. Mock route tests cover Cornrows generation, output persistence, auth refresh, upload ownership, quota rejection and stage-specific failures. These checks do not verify production services or establish the cause of the reported screenshot error.
+
 - `pnpm typecheck` passed.
 - `pnpm lint` passed.
 - `/`, `/upload`, `/sign-in`, and `/pricing` returned HTTP 200 locally.
