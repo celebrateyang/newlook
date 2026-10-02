@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:vercel": "convex deploy --typecheck enable --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd \"pnpm build\"",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

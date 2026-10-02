@@ -33,7 +33,18 @@ Never prefix AI, R2, Clerk secret, or payment credentials with `NEXT_PUBLIC_`.
 
 ## Deploying backend changes
 
-Web deployment does not deploy Convex functions. Before releasing Web code that calls new Convex functions, run `pnpm convex dev --once` for the development backend and `pnpm convex deploy` for production. Confirm that Vercel's `NEXT_PUBLIC_CONVEX_URL` points to the intended deployment and that its `CLERK_JWT_ISSUER_DOMAIN` matches the Web Clerk instance.
+The repository's `vercel.json` sets the Vercel Build Command to `pnpm build:vercel`. This runs Convex's integrated deploy command with strict backend typechecking and `pnpm build`, passing the target backend URL as `NEXT_PUBLIC_CONVEX_URL`. Vercel publishes the Web deployment only after the combined command succeeds. Convex's command builds the Web app before pushing backend functions; publication follows both steps. Backend and Web publication are not a single atomic transaction, so keep schema/function changes compatible with the currently published Web app.
+
+One-time dashboard setup:
+
+1. In the existing Convex project's **production deployment → Settings → General**, generate a production deploy key with `deployment:deploy` permission.
+2. In **Vercel project → Settings → Environment Variables**, save it as `CONVEX_DEPLOY_KEY`, scoped **only to Production**. This is separate from `SHARING_SIGNING_SECRET`.
+3. In **Vercel → Settings → Build and Deployment**, remove any old Build Command override of `pnpm build`/`next build`, or change it to `pnpm build:vercel`.
+4. Keep the Git repository connected and set the intended production branch. Push this configuration and redeploy once; future production-branch pushes will deploy both services automatically. Confirm the first build logs show successful Convex deployment as well as a successful Next.js build.
+
+For branch/PR previews, generate a separate **Preview Deploy Key** in Convex project settings and add it under the same `CONVEX_DEPLOY_KEY` name scoped **only to Preview**. Configure Convex preview defaults such as `CLERK_JWT_ISSUER_DOMAIN` and `SHARING_SIGNING_SECRET` to match the Web Preview environment. Preview backends have separate data and do not include production hairstyle history. Without a preview deploy key, this build command cannot deploy a branch preview; do not reuse the production key there.
+
+Official setup: [Convex with Vercel](https://docs.convex.dev/production/hosting/vercel). Dashboard deploy keys are not stored in the repository. Local `pnpm build` still only builds Next.js; use `pnpm convex dev --once` for manual development backend deployment or `pnpm convex deploy` for manual production deployment. Ensure Convex's Clerk issuer matches the corresponding Web Clerk instance. Web environment variables are not automatically copied into Convex by deployment.
 
 Use `pnpm convex function-spec` (development) or `pnpm convex function-spec --prod` to inspect deployed functions. The side-view flow requires `generations:startSide` and `generations:appendSideResult`; a missing starter causes immediate failure before AI generation.
 
