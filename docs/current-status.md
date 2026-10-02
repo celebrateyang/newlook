@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-02
 
+## Google Analytics — 2026-10-02
+
+- Added GA4 `G-RFVZLETJDJ` to the locale root layout, restricted to production builds on the official domains. Public environment configuration can override or disable it.
+- Manual pageviews cover initial loads and client navigation; resource IDs, sharing tokens, query strings, fragments and personalized titles are excluded. Advertising features are disabled in the tag. English and Chinese privacy disclosures were updated.
+- GA4 Enhanced measurement must be turned off before publication (see README). Real Google collection and deployment have not been verified. No consent-management platform or funnel-event tracking was added. This implements the user's GA4 choice in place of the earlier PostHog-only plan.
+
 ## Planning decisions recorded on 2026-10-01
 
 - Recorded the [Web and WeChat mini-program plan](wechat-miniprogram-plan.md) as the basis for future development; no mini-program implementation was added.

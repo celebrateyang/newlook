@@ -64,6 +64,14 @@ English and Simplified Chinese are available at `/en` and `/zh`. The header lang
 
 UI translations live in `src/lib/i18n/zh.json`, with English source text as the fallback. Chinese analysis prompts and salon instructions are supported; downloaded PDF guides and salon packs currently retain English text and are labeled accordingly. Add future locales through `src/lib/i18n/locale.ts`, the translation loader and the language selector.
 
+## Google Analytics
+
+GA4 uses the public measurement ID `G-RFVZLETJDJ`. Override it with `NEXT_PUBLIC_GA_MEASUREMENT_ID` (an empty value disables it). The tag loads only in production builds on `newself.cc` or `www.newself.cc`, excluding localhost and Vercel preview domains. Both languages record initial visits and client-side page navigation.
+
+Before publishing, open GA4 **Admin → Data streams → Web stream** and turn **Enhanced measurement off**. The app sends manual pageviews; automatic history, form, outbound-link and download measurement would duplicate visits or expose resource URLs. Page locations are category paths with no query strings, fragments, sharing tokens or result IDs. Referrers are limited to sanitized internal page categories; external acquisition URLs are intentionally omitted. Do not add a second GA tag through GTM. Advertising personalization and Google signals are disabled in the tag.
+
+Publish the Web change, then use Google tag's **Test installation** and GA4 **Realtime** to verify a real visit and navigation. Local code checks do not verify Google collection. This integration does not add a consent-management platform or product funnel events.
+
 ## Checks
 
 ```bash

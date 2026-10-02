@@ -19,7 +19,7 @@ export default async function PrivacyPage() {
   if (await getLocale() === "zh") return <InfoPage eyebrow="隐私政策" title="认真保护你的照片。"><ChineseLegalContent kind="privacy" /></InfoPage>;
   return (
     <InfoPage eyebrow="PRIVACY POLICY" title="Your photos deserve careful handling.">
-      <p className="text-sm font-semibold text-ink/45">Effective date: September 30, 2026</p>
+      <p className="text-sm font-semibold text-ink/45">Effective date: October 2, 2026</p>
       <p>
         This Privacy Policy explains how newself (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, shares, and protects information when you use <Link className="font-semibold text-ink underline underline-offset-4" href="/">newself.cc</Link> and its AI hairstyle advisory features.
       </p>
@@ -74,6 +74,7 @@ export default async function PrivacyPage() {
         <ul className={listClass}>
           <li><strong className="text-ink">Clerk</strong> for authentication and account sessions;</li>
           <li><strong className="text-ink">Google</strong> when you choose Google Sign-In;</li>
+          <li><strong className="text-ink">Google Analytics</strong> for website usage statistics, including page categories and browser/device information. We do not send photos, prompts, account information, sharing tokens, or result IDs to Analytics;</li>
           <li><strong className="text-ink">Convex</strong> for application data and generation records;</li>
           <li><strong className="text-ink">Cloudflare R2</strong> for private image storage;</li>
           <li><strong className="text-ink">OpenAI</strong> for AI analysis and hairstyle generation; and</li>
@@ -120,6 +121,7 @@ export default async function PrivacyPage() {
         <p>
           We and Clerk use essential cookies and similar technologies to authenticate users, maintain sessions, prevent abuse, and operate the service. newself does not currently use third-party advertising cookies or sell data for targeted advertising.
         </p>
+        <p>Google Analytics uses analytics cookies to measure visits on our production website. Advertising personalization and Google signals are disabled in our tag configuration. You can block analytics cookies or scripts through your browser settings or extensions.</p>
       </section>
 
       <section className="space-y-3">

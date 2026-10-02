@@ -38,7 +38,8 @@ const privacy = [
     "如需完整删除账户及服务数据，请使用账户关联邮箱发送邮件至 hello@newself.cc。完成请求前，我们可能需要验证你的身份。"
   ]],
   ["9. Cookie", [
-    "我们与 Clerk 使用必要 Cookie 及类似技术来验证用户身份、维持会话、防止滥用和运行服务。newself 目前不使用第三方广告 Cookie，也不为定向广告出售数据。"
+    "我们与 Clerk 使用必要 Cookie 及类似技术来验证用户身份、维持会话、防止滥用和运行服务。newself 目前不使用第三方广告 Cookie，也不为定向广告出售数据。",
+    "我们使用 Google Analytics 及统计 Cookie 衡量正式网站的访问情况，包括页面类型、浏览器和设备信息。统计代码已关闭广告个性化和 Google signals。我们不向 Analytics 发送照片、提示词、账户信息、分享令牌或结果 ID。你可以通过浏览器设置或扩展程序阻止统计 Cookie 或脚本。"
   ]],
   ["10. 跨境处理", [
     "服务提供商可能在你所在国家或地区以外处理信息。在有要求时，我们采用适用的合同或法律保障措施进行跨境传输。"
@@ -98,7 +99,7 @@ const terms = [
 
 export function ChineseLegalContent({ kind }: { kind: "privacy" | "terms" }) {
   return <>
-    <p className="text-sm font-semibold text-ink/45">生效日期：2026 年 9 月 30 日</p>
+    <p className="text-sm font-semibold text-ink/45">生效日期：{kind === "privacy" ? "2026 年 10 月 2 日" : "2026 年 9 月 30 日"}</p>
     <p>{kind === "privacy" ? "本隐私政策说明你使用 newself.cc 及其 AI 发型顾问功能时，newself（下称“我们”）如何收集、使用、共享和保护信息。" : "本服务条款（下称“条款”）适用于你使用 newself.cc 及 newself AI 发型顾问服务。创建账户或使用 newself，即表示你同意本条款及我们的隐私政策。"}</p>
     {(kind === "privacy" ? privacy : terms).map(([heading, paragraphs]) => <section key={heading} className="space-y-3"><h2 className="font-display text-2xl font-bold tracking-tight text-ink">{heading}</h2>{paragraphs.map(text => <p key={text}>{text}</p>)}</section>)}
   </>;
