@@ -4,6 +4,12 @@ newself is an AI hairstyle advisor: it analyses a person's face and current hair
 
 Official site: [newself.cc](https://newself.cc)
 
+## Stylist recruitment
+
+`/zh/stylists` and `/en/stylists` introduce mainland China stylist recruitment. The navigation link is available to signed-out and signed-in visitors on mobile and desktop. Clerk sign-in and the matching Convex backend are required to save applications; visitors can read the recruitment page without signing in.
+
+Deploy the new `stylistApplications` schema/functions with the Web update. Applicants can manage only their own application and withdraw to delete it. Review received applications privately in the Convex dashboard table `stylistApplications`; no email/WeChat notification or admin approval workflow is configured. Contact details are for recruitment only. Public profiles, appointments, order acceptance and payments are future work.
+
 ## Stack
 
 - Next.js App Router, TypeScript and Tailwind CSS

@@ -4,6 +4,7 @@ import { v } from "convex/values";
 const timestamp = { createdAt: v.number(), updatedAt: v.optional(v.number()) };
 
 export default defineSchema({
+  stylistApplications: defineTable({ clerkId: v.string(), name: v.string(), phone: v.string(), wechat: v.string(), city: v.string(), district: v.string(), salon: v.string(), address: v.string(), experienceYears: v.number(), specialties: v.array(v.string()), portfolioUrl: v.string(), introduction: v.string(), consent: v.boolean(), consentVersion: v.string(), consentAt: v.number(), status: v.literal("received"), ...timestamp }).index("by_clerk_id", ["clerkId"]),
   hairstylePolls: defineTable({ userId: v.id("users"), token: v.string(), active: v.boolean(), title: v.string(), resultIds: v.array(v.id("generationResults")), totals: v.array(v.number()), counts: v.array(v.number()), ...timestamp }).index("by_token", ["token"]).index("by_user", ["userId"]),
   pollRatings: defineTable({ pollId: v.id("hairstylePolls"), voterId: v.string(), scores: v.array(v.number()), ...timestamp }).index("by_poll_voter", ["pollId", "voterId"]),
   ratingLimits: defineTable({ key: v.string(), windowStart: v.number(), used: v.number() }).index("by_key", ["key"]).index("by_window", ["windowStart"]),

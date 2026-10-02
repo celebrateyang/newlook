@@ -2,6 +2,16 @@
 
 Last updated: 2026-10-02
 
+## Mainland China stylist recruitment — 2026-10-02
+
+- Added English/Chinese `/stylists` recruitment pages and a “理发师入驻” header link visible on desktop and mobile, including signed-out visitors. The page connects AI previews to professional feasibility confirmation and salon execution.
+- First phase is private recruitment applications for mainland China. No public stylist directory, approval badge, matching, appointment, order acceptance or payment is implied or implemented.
+- Signed-in stylists can submit, reload, update and withdraw an application. Fields include service city/area, salon/address, experience, specialties, mainland China phone number, optional WeChat ID, optional HTTPS portfolio link and introduction. Submission records recruitment-specific consent; withdrawal deletes the application row.
+- Convex authenticates all application queries/mutations and derives ownership from the session, with one application per account. Validation runs in both the browser and backend. API mutations require same-origin requests; contact data is never public. Privacy disclosures were updated.
+- Review applications privately in the Convex dashboard's `stylistApplications` table; this phase has no admin review UI or automated contact notification. Submission means “received,” not approved. Do not use contact details for unrelated marketing.
+- Local checks and isolated regression tests do not verify real signed-in submissions or mainland China connectivity. Publish the compatible Convex functions/schema together with the Web update before opening recruitment.
+- Verification: `pnpm typecheck` and `pnpm lint` passed; all 10 targeted application/localization tests passed. Both recruitment routes returned 200, signed-out application GET returned 401, and the Chinese narrow-screen page/navigation were visually inspected. Real signed-in application submission and production publication remain unverified.
+
 ## Google Analytics — 2026-10-02
 
 - Added GA4 `G-RFVZLETJDJ` to the locale root layout, restricted to production builds on the official domains. Public environment configuration can override or disable it.

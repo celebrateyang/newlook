@@ -16,6 +16,8 @@ import type * as hairstyleCatalog from "../hairstyleCatalog.js";
 import type * as hairstyles from "../hairstyles.js";
 import type * as polls from "../polls.js";
 import type * as shares from "../shares.js";
+import type * as stylistApplicationFields from "../stylistApplicationFields.js";
+import type * as stylistApplications from "../stylistApplications.js";
 import type * as uploads from "../uploads.js";
 
 import type {
@@ -33,6 +35,8 @@ declare const fullApi: ApiFromModules<{
   hairstyles: typeof hairstyles;
   polls: typeof polls;
   shares: typeof shares;
+  stylistApplicationFields: typeof stylistApplicationFields;
+  stylistApplications: typeof stylistApplications;
   uploads: typeof uploads;
 }>;
 
