@@ -9,6 +9,9 @@
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--ivory); color:var(--ink); font-family:var(--font-sans),sans-serif; }
+html[lang="zh-CN"] body { font-family:var(--font-sans),"PingFang SC","Microsoft YaHei",sans-serif; }
+html[lang="zh-CN"] .font-display { font-family:"PingFang SC","Microsoft YaHei",sans-serif; line-height:1.22; letter-spacing:-.02em; }
+html[lang="zh-CN"] .eyebrow { letter-spacing:.08em; }
 @keyframes generation-progress { 0% { transform:translateX(-125%); } 55% { transform:translateX(75%); } 100% { transform:translateX(225%); } }
 .generation-progress { animation:generation-progress 2.2s ease-in-out infinite; }
 @keyframes discovery-choice-glow {

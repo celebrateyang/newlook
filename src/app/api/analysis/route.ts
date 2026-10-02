@@ -5,6 +5,7 @@ import { z } from "zod";
 import { analyzeHairImage } from "@/lib/ai/hair-analysis";
 import { r2Env } from "@/lib/env";
 import { createR2Client } from "@/lib/r2/client";
+import { getLocale } from "@/lib/i18n/server";
 
 export const runtime = "nodejs";
 
@@ -26,8 +27,9 @@ export async function POST(request: Request) {
     const object = await createR2Client().send(new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: body.data.key }));
     if (!object.Body) throw new Error("The uploaded image could not be read from R2.");
     const bytes = await object.Body.transformToByteArray();
-    const analysis = await analyzeHairImage(bytes, body.data.mimeType);
-    return NextResponse.json({ analysis });
+    const locale = await getLocale();
+    const analysis = await analyzeHairImage(bytes, body.data.mimeType, locale);
+    return NextResponse.json({ analysis, locale });
   } catch (error) {
     console.error("Hair analysis failed", error);
     const message = error instanceof Error ? error.message : "Analysis failed unexpectedly.";

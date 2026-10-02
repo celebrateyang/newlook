@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { InfoPage } from "@/components/info-page";
+import { ChineseLegalContent } from "@/components/legal-zh";
+import { getLocale, getTranslations } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description: "How newself collects, uses, stores, and protects account data, photos, and AI hairstyle results.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return {
+  title: t("Privacy Policy"),
+  description: t("How newself collects, uses, stores, and protects account data, photos, and AI hairstyle results."),
 };
+}
 
 const headingClass = "font-display text-2xl font-bold tracking-tight text-ink";
 const listClass = "list-disc space-y-2 pl-6 marker:text-coral";
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  if (await getLocale() === "zh") return <InfoPage eyebrow="隐私政策" title="认真保护你的照片。"><ChineseLegalContent kind="privacy" /></InfoPage>;
   return (
     <InfoPage eyebrow="PRIVACY POLICY" title="Your photos deserve careful handling.">
       <p className="text-sm font-semibold text-ink/45">Effective date: September 30, 2026</p>

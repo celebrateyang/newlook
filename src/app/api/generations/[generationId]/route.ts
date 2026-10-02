@@ -5,6 +5,7 @@ import { getOwnedGeneration } from "@/lib/generations/server";
 import { getSalonGuide } from "@/lib/hairstyles/salon-guides";
 import { r2Env } from "@/lib/env";
 import { createR2Client } from "@/lib/r2/client";
+import { getLocale } from "@/lib/i18n/server";
 
 export const runtime = "nodejs";
 
@@ -31,7 +32,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
       source: { width: owned.data.upload.width, height: owned.data.upload.height },
       reference,
       views,
-      guide: getSalonGuide(owned.data.hairstyle.slug),
+      guide: getSalonGuide(owned.data.hairstyle.slug, await getLocale()),
     });
   } catch (error) {
     console.error("Could not load generation", error);

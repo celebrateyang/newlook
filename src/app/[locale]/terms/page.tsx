@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/localized-link";
 import { InfoPage } from "@/components/info-page";
+import { ChineseLegalContent } from "@/components/legal-zh";
+import { getLocale, getTranslations } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Terms of Service",
-  description: "Terms governing access to and use of the newself AI hairstyle advisory service.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return {
+  title: t("Terms of Service"),
+  description: t("Terms governing access to and use of the newself AI hairstyle advisory service."),
 };
+}
 
 const headingClass = "font-display text-2xl font-bold tracking-tight text-ink";
 const listClass = "list-disc space-y-2 pl-6 marker:text-coral";
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  if (await getLocale() === "zh") return <InfoPage eyebrow="服务条款" title="清晰的条款，安心尝试新发型。"><ChineseLegalContent kind="terms" /></InfoPage>;
   return (
     <InfoPage eyebrow="TERMS OF SERVICE" title="Clear terms for trying a new look.">
       <p className="text-sm font-semibold text-ink/45">Effective date: September 30, 2026</p>

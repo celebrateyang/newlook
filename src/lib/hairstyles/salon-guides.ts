@@ -1,4 +1,6 @@
 import type { StarterHairstyleSlug } from "./catalog";
+import guidesZh from "./salon-guides-zh.json";
+import type { Locale } from "@/lib/i18n/locale";
 
 export interface SalonGuide {
   overview: string;
@@ -77,7 +79,7 @@ const guides: Partial<Record<StarterHairstyleSlug, SalonGuide>> = {
   },
 };
 
-export function getSalonGuide(slug: string) {
+function englishSalonGuide(slug: string) {
   return guides[slug as StarterHairstyleSlug] ?? {
     overview: "Use the preview as a direction for silhouette, length, movement, and finish rather than as a rigid template.",
     feasibility: "A stylist should adapt the shape to the client's current length, density, texture, growth pattern, and daily styling routine.",
@@ -91,4 +93,11 @@ export function getSalonGuide(slug: string) {
     dailyStylingMinutes: 8,
     maintenanceWeeks: 6,
   };
+}
+
+export function getSalonGuide(slug: string, locale: Locale = "en"): SalonGuide {
+  const guide = englishSalonGuide(slug);
+  if (locale === "en") return guide;
+  const translated = (guidesZh as Record<string, typeof guidesZh.default>)[slug] ?? guidesZh.default;
+  return { ...guide, ...translated };
 }

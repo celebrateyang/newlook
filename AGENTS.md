@@ -52,8 +52,8 @@ pnpm convex dev
 
 ## Important paths
 
-- Marketing homepage: `src/app/page.tsx`
-- Selfie flow: `src/app/upload/page.tsx`
+- Marketing homepage: `src/app/[locale]/page.tsx`
+- Selfie flow: `src/app/[locale]/upload/page.tsx`
 - R2 signing endpoint: `src/app/api/r2/upload-url/route.ts`
 - Convex data model: `convex/schema.ts`
 - AI provider contract and router: `src/lib/ai/`

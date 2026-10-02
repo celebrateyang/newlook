@@ -63,12 +63,18 @@ Last updated: 2026-10-02
 - Persistence of face and hair analysis results in Convex.
 - Hairstyle seed data and recommendation engine.
 - Background generation jobs, feasibility analysis, and stylist guides.
-- Chinese localization.
 - Payments and production deployment.
 
 ## Next recommended milestone
 
 Verify the signed-in end-to-end try-on with a real selfie. Then persist face/hair analysis and replace the starter-style bridge with seeded hairstyle data and a deterministic recommendation engine.
+
+## English and Chinese localization — 2026-10-02
+
+- Moved Web pages under `/en` and `/zh`, with language selection in the header, a saved locale cookie, browser-language detection for older unprefixed links, and localized canonical/hreflang metadata. API and asset URLs remain unprefixed.
+- Added centralized UI translations, Chinese legal pages, official Clerk Chinese localization, and Chinese text throughout the upload, recommendation, result, quota, sharing and rating flows. Existing ownership and quota enforcement remain unchanged.
+- Localized AI analysis prompts and structured salon instructions. Analysis session caches are separated by locale. PDF guides and ZIP salon packs currently retain English guide text; Chinese download buttons state this explicitly.
+- Local checks cover language preference, route preservation, translations, guide dimensions and AI prompt constraints, alongside the existing generation/sharing regression suite. Signed-in generation and social-platform integration still require real end-to-end verification.
 
 ## Environment
 

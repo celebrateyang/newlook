@@ -1,7 +1,8 @@
 import "server-only";
 import { z } from "zod";
 import { analysisEnv } from "@/lib/env";
-import { STARTER_HAIRSTYLES } from "@/lib/hairstyles/catalog";
+import { buildHairAnalysisPrompt } from "./prompts/hair-analysis";
+import type { Locale } from "@/lib/i18n/locale";
 
 const hairstyleSlugs = [
   "soft-layered-cut",
@@ -123,10 +124,9 @@ function outputText(payload: unknown) {
   return parsed.data.output?.flatMap((item) => item.content ?? []).find((item) => item.type === "output_text")?.text;
 }
 
-export async function analyzeHairImage(bytes: Uint8Array, mimeType: string): Promise<HairAnalysis> {
+export async function analyzeHairImage(bytes: Uint8Array, mimeType: string, locale: Locale = "en"): Promise<HairAnalysis> {
   const env = analysisEnv();
   const imageUrl = `data:${mimeType};base64,${Buffer.from(bytes).toString("base64")}`;
-  const approvedStyles = STARTER_HAIRSTYLES.map((style) => `${style.slug}: ${style.name} — ${style.prompt}`).join("\n");
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export async function analyzeHairImage(bytes: Uint8Array, mimeType: string): Pro
       input: [{
         role: "user",
         content: [
-          { type: "input_text", text: `Analyze only visible face proportions and current hair characteristics for hairstyle advice. Do not infer identity, ethnicity, health, attractiveness, age, or other sensitive traits. If a feature is not visible, use 'unclear'. Recommend exactly three realistic hairstyles from the approved catalog below. Return the exact styleSlug and name shown in the catalog, rank them by fit, and explain each briefly. Do not recommend a style outside this catalog. This is visual styling guidance, not a medical assessment.\n\nApproved catalog:\n${approvedStyles}` },
+          { type: "input_text", text: buildHairAnalysisPrompt(locale) },
           { type: "input_image", image_url: imageUrl, detail: "high" },
         ],
       }],
