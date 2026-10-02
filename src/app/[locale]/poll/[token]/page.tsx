@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = poll?.title || t("Which hairstyle suits me best?");
   const description = t("Help me choose my next hairstyle. Rate these looks without signing in.");
   const image = `/api/polls/${token}/image?locale=${await getLocale()}`;
-  return { title, description, robots: { index: false, follow: false }, openGraph: { title, description, images: [{ url: image, width: 1200, height: 630, type: "image/jpeg", alt: t("Hairstyle comparison preview") }] }, twitter: { card: "summary_large_image", title, description, images: [image] } };
+  return { title, description, robots: { index: false, follow: false }, openGraph: { title, description, images: [{ url: `${image}&shape=square`, width: 1200, height: 1200, type: "image/jpeg", alt: t("Hairstyle comparison preview") }] }, twitter: { card: "summary_large_image", title, description, images: [image] } };
 }
 export default async function PollPage({ params }: Props) {
   const t = await getTranslations(), { token } = await params, poll = await loadPoll(token);

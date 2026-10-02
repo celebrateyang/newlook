@@ -13,6 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     if (!poll) return new NextResponse(null, { status: 404 });
     const query = new URL(request.url).searchParams;
     const language = query.get("locale"), locale = isLocale(language) ? language : "en";
+    const shape = query.get("shape") === "square" ? "square" : "wide";
     const rawIndex = query.get("index");
     const index = rawIndex === null ? null : /^\d$/.test(rawIndex) ? Number(rawIndex) : -1;
     if (index !== null && (index < 0 || index >= poll.items.length)) return new NextResponse(null, { status: 404 });
@@ -23,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
       if (!object.Body) throw new Error("Image not found");
       return object.Body.transformToByteArray();
     }));
-    const bytes = index === null ? await createPollCollage(images, locale) : await sharp(images[0]).rotate().resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
+    const bytes = index === null ? await createPollCollage(images, locale, shape) : await sharp(images[0]).rotate().resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true }).jpeg({ quality: 88 }).toBuffer();
     return new NextResponse(new Uint8Array(bytes), { headers: { "Content-Type": "image/jpeg", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
   } catch { return new NextResponse(null, { status: 503 }); }
 }

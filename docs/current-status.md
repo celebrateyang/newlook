@@ -53,6 +53,8 @@ Last updated: 2026-10-02
 
 ## Verification already completed
 
+- Square social-cover follow-up (2026-10-02): the reported Moments thumbnail cropped the horizontal collage. Public Open Graph metadata and the owner's sharing preview now use a separate 1200×1200 cover; X retains a 1200×630 card. Collage rows pack actual portrait widths with 12px gaps, center incomplete rows, and preserve full images. English/Chinese square covers are verified for 2–6 selections, including simulated 100px square feed crops where every selected tile remains visible. Actual WeChat thumbnail selection/caching still requires verification after Web deployment; no WeChat JS SDK was added.
+
 - Localized collage follow-up (2026-10-02): gallery preview and public Open Graph/X image URLs now explicitly include the page locale. Chinese images use “哪款发型最适合我？” and “帮我选发型 · 给 A–F 评分”; English images retain English copy. Removed the sign-in message from preview images in both languages. Bundled Noto Sans SC outlines avoid server-font dependencies. Regression checks cover both languages across all 2–6 image layouts and the absence of sign-in copy. Publishing this Web change updates existing sharing URLs without recreating polls.
 
 - Collage lettering follow-up (2026-10-02): the public preview SVG used generic system-font text, which rendered as missing-glyph boxes on the reported Vercel deployment. Replaced all fixed preview lettering and A–F labels with bundled Manrope glyph outlines (OFL license included), removing runtime font lookup/download dependencies. Regression coverage checks visible, distinct path-rendered letters and all 2–6 image layouts; generated collages were visually inspected. This Web fix requires publishing the updated code to Vercel; preview copy remains English.
