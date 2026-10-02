@@ -9,6 +9,7 @@ import { ArrowLeft, ArrowRight, Camera, Check, CheckCircle2, Eye, EyeOff, ImageP
 import type { HairAnalysis } from "@/lib/ai/hair-analysis";
 import { STARTER_HAIRSTYLES, type StarterHairstyleSlug } from "@/lib/hairstyles/catalog";
 import type { HomeHistory } from "@/lib/home/history";
+import { QuotaNotice } from "@/components/results/quota-notice";
 
 const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxBytes = 10 * 1024 * 1024;
@@ -306,6 +307,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   const scrollToChoices = () => document.getElementById("discovery-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return <section aria-label="Hairstyle advisor" className="advisor-workspace">
+    <QuotaNotice refreshKey={`${generatingStyle ?? ""}:${referenceBusy}:${uploadedKey ?? ""}`} />
     <input ref={inputRef} aria-label="Upload your selfie" type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => choose(event.target.files?.[0])} />
     <input ref={referenceInputRef} aria-label="Upload a hairstyle reference photo" type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => chooseReference(event.target.files?.[0])} />
     {compactWorkspace ? <div id="try-on-preview" className="scroll-mt-4 rounded-[1.6rem] bg-white p-5 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-7">

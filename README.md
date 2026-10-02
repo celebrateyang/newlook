@@ -48,3 +48,5 @@ pnpm lint
 - Central identity-preservation prompt
 
 The canonical product and technical specification is available at [`docs/product-spec-v2.md`](docs/product-spec-v2.md). Current implementation status and the recommended next milestone are tracked in [`docs/current-status.md`](docs/current-status.md).
+
+The future Web and WeChat mini-program direction, shared Convex backend, separate user accounts, credits/membership boundaries, sharing scenarios, and registration/release research are recorded in [`docs/wechat-miniprogram-plan.md`](docs/wechat-miniprogram-plan.md). Confirmed decisions and proposals are distinguished there; mini-program and payment integrations have not been implemented or verified by this planning work.

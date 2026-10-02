@@ -1,5 +1,14 @@
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-const plans = [{ name:"Free", price:"$0", detail:"One personal recommendation", items:["Face + hair profile","1 hairstyle","1–2 preview images"] },{ name:"Popular", price:"$2.99", detail:"Explore with confidence", items:["20 preview images","Reality checks","Save your favourites"] },{ name:"Salon pack", price:"$4.99", detail:"Ready for your appointment", items:["Full recommendations","10 hairstyle renders","Stylist guide + multi-view"] }];
-export default function PricingPage() { return <main className="min-h-screen bg-ivory"><SiteHeader /><section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="max-w-2xl"><p className="eyebrow mb-5">PRICING</p><h1 className="font-display text-5xl leading-none tracking-tight sm:text-6xl">Start free. Decide when you&apos;re ready.</h1><p className="mt-6 text-lg leading-8 text-ink/60">Launch prices are provisional while we evaluate the best payment partner.</p></div><div className="mt-12 grid gap-5 lg:grid-cols-3">{plans.map((plan,index)=><article key={plan.name} className={`rounded-3xl border p-7 ${index===1?"border-coral bg-coral text-white":"border-ink/10 bg-white"}`}><p className="text-sm font-bold">{plan.name}</p><p className="mt-5 font-display text-5xl">{plan.price}</p><p className={`mt-2 text-sm ${index===1?"text-white/70":"text-ink/50"}`}>{plan.detail}</p><div className="my-7 h-px bg-current opacity-15"/><ul className="space-y-3 text-sm">{plan.items.map(item=><li className="flex items-center gap-2" key={item}><Check className="size-4"/>{item}</li>)}</ul><Link href="/upload" className={`mt-8 inline-flex rounded-full px-5 py-3 text-sm font-bold ${index===1?"bg-white text-ink":"bg-ink text-white"}`}>Try newself</Link></article>)}</div></section></main>; }
+
+export default function PricingPage() {
+  return <main className="min-h-screen bg-ivory"><SiteHeader /><section className="mx-auto max-w-4xl px-5 py-16 sm:px-8 lg:py-24">
+    <p className="eyebrow mb-5">EARLY ACCESS</p><h1 className="font-display text-5xl leading-none tracking-tight sm:text-6xl">Find your next look, free.</h1>
+    <p className="mt-6 text-lg leading-8 text-ink/60">During early access, each signed-in account can generate up to 6 hairstyle previews per day. Credits and membership plans are coming later.</p>
+    <article className="mt-10 rounded-3xl border border-ink/10 bg-white p-7"><h2 className="text-sm font-bold">Free early access</h2><p className="mt-5 font-display text-5xl">$0</p>
+      <ul className="my-7 space-y-3 text-sm">{["6 generation attempts per day, shared across try-on, reference transfer and side views", "Resets at midnight Beijing time (UTC+8); failed attempts count", "Saved previews and available salon guides", "Optional public sharing and friend ratings"].map(item => <li className="flex items-start gap-2" key={item}><Check className="mt-0.5 size-4 shrink-0 text-coral" />{item}</li>)}</ul>
+      <Link href="/upload" className="button-primary">Try newself</Link>
+    </article>
+  </section></main>;
+}

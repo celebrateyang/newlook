@@ -80,6 +80,7 @@ export default function PrivacyPage() {
 
       <section className="space-y-3">
         <h2 className={headingClass}>6. Storage and security</h2>
+        <p>Sharing is off by default. When you create a public rating link, anyone with that link can view, save, and reshare the selected generated image. Original selfies and reference uploads are not included. You can turn off the link from the result page; this stops future access through newself, but cannot remove copies already saved or cached by other people or social platforms. We store ratings with a sign-in account identifier to limit each account to one rating per shared result. Public pages show only aggregate scores.</p>
         <p>
           Photos are stored in a private Cloudflare R2 bucket and accessed through short-lived signed URLs. Link expiration limits access to a link but does not itself delete the file. We use authentication, ownership checks, transport encryption, access controls, and restricted server credentials. No storage or transmission method is completely secure.
         </p>

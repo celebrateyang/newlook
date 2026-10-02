@@ -1,3 +1,4 @@
+import { quotaErrorResponse } from "@/lib/generations/quota";
 import { randomUUID } from "node:crypto";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -101,6 +102,8 @@ export async function POST(request: Request) {
     const urls = await Promise.all(keys.map((key) => getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }), { expiresIn: 3600 })));
     return NextResponse.json({ generationId, styleName: "Reference Hairstyle", results: urls.map((url, index) => ({ url, key: keys[index] })) });
   } catch (error) {
+    const quotaResponse = quotaErrorResponse(error);
+    if (quotaResponse) return quotaResponse;
     console.error("Reference hairstyle generation failed", error);
     if (convex && generationId) {
       await refreshConvexAuth?.().catch((refreshError) => console.error("Could not refresh Convex authentication", refreshError));

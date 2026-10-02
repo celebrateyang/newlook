@@ -1,6 +1,15 @@
 # newself Current Status
 
-Last updated: 2026-09-28
+Last updated: 2026-10-02
+
+## Planning decisions recorded on 2026-10-01
+
+- Recorded the [Web and WeChat mini-program plan](wechat-miniprogram-plan.md) as the basis for future development; no mini-program implementation was added.
+- Plan two frontends: Web primarily for overseas users and `NewSelf发型设计` primarily for domestic users, sharing the same Convex database and core business functions.
+- Treat Clerk/Web users and WeChat users as separate accounts in the first phase, without binding or automatic merging. Credits, membership, orders, photos and results remain separate per user, even when their business system is shared.
+- Credits and membership are possible future monetization options; pricing and payment providers remain undecided and checkout remains deferred.
+- Mini-program HTTP API access is technically supported by Convex, but WeChat authentication, production domain configuration, domestic connectivity, AI provider eligibility and data-handling requirements remain unverified.
+- Web result sharing and friend ratings were requested on 2026-10-02 and are now implemented as described below. Mini-program sharing, Taro, domestic AI/storage options and salon scenarios remain proposals. Registration, filing and release preparation are documented in the linked plan.
 
 ## Completed foundation
 
@@ -64,3 +73,15 @@ Verify the signed-in end-to-end try-on with a real selfie. Then persist face/hai
 ## Environment
 
 Copy `.env.example` to `.env.local`. Never commit `.env.local` or paste secret values into chat messages.
+
+## Daily generation limit and Web sharing — 2026-10-02
+
+- Added a server-enforced limit of 6 generation attempts per Clerk account per calendar day, resetting at midnight Asia/Shanghai (UTC+8). Try-on, reference transfer and side-view requests share the limit. Failed attempts count; validation failures before reservation do not. Convex mutations reserve quota atomically before the AI call. Existing same-day front generations are included at first reservation.
+- Generated output images already persist in private R2, with lifecycle and result metadata in Convex. The existing homepage restores the most recent result; this change does not add a full history gallery.
+- Added remaining-quota notices and aligned the pricing page with free early access; credits, membership and checkout remain deferred.
+- Added owner-controlled public links for individual saved result views. Sharing starts disabled; reopening a disabled share rotates the token, keeping old links invalid. Only the selected output is public; original selfies, reference photos and account details are excluded.
+- Added Facebook and X share links, browser-native sharing, and WeChat copy-link instructions. No WeChat JS SDK or automatic Moments publishing is integrated.
+- Added bilingual public rating pages, 1–5 ratings, atomic aggregate counts, one editable rating per signed-in account and a try-your-own CTA. Owners cannot rate their own share. Public visitors can view without signing in; submitting a rating requires sign-in.
+- Shared images use a revocation-checked server endpoint with no-store responses, plus Open Graph and X card metadata. Turning off sharing blocks future app access; externally saved or cached copies cannot be recalled.
+- Social-platform publishing, preview fetching and the authenticated browser flow still require real end-to-end verification. Deploy the updated Convex schema/functions alongside the Web app.
+- Verification: `pnpm typecheck`, `pnpm lint`, and Convex regression tests (`pnpm test`). Local HTTP smoke checks confirmed pricing returns 200, invalid/revoked share paths return 404, and unauthenticated quota access returns 401. Tests use an isolated mock Convex backend and do not prove external integrations.

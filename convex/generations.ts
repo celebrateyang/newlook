@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { catalogDocument, hairstyleCatalog } from "./hairstyleCatalog";
+import { DAILY_GENERATION_LIMIT, quotaDay, readQuota, reserveGeneration } from "./generationQuota";
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -15,7 +16,7 @@ export const start = mutation({
     const user = await ctx.db.query("users").withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)).unique();
     if (!user) throw new Error("User profile not found");
     const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
-    if (!upload || upload.userId !== user._id) throw new Error("Upload not found");
+    if (!upload || upload.userId !== user._id || upload.type !== "original") throw new Error("Upload not found");
     const style = hairstyleCatalog[args.styleSlug as keyof typeof hairstyleCatalog];
     if (!style) throw new Error("Unsupported hairstyle");
     let hairstyle = await ctx.db.query("hairstyles").withIndex("by_slug", (q) => q.eq("slug", args.styleSlug)).unique();
@@ -27,6 +28,7 @@ export const start = mutation({
       hairstyle = await ctx.db.get(hairstyle._id);
     }
     if (!hairstyle) throw new Error("Could not create hairstyle");
+    await reserveGeneration(ctx, user._id);
     return await ctx.db.insert("generations", {
       userId: user._id, uploadId: upload._id, hairstyleId: hairstyle._id, provider: args.provider,
       model: args.model, promptVersion: args.promptVersion, status: "processing", creditsUsed: 0, createdAt: Date.now(),
@@ -58,6 +60,7 @@ export const startReference = mutation({
       hairstyle = await ctx.db.get(hairstyleId);
     }
     if (!hairstyle) throw new Error("Could not create reference hairstyle");
+    await reserveGeneration(ctx, user._id);
     return await ctx.db.insert("generations", {
       userId: user._id, uploadId: upload._id, hairstyleId: hairstyle._id, referenceUploadId: referenceUpload._id,
       provider: args.provider, model: args.model, promptVersion: args.promptVersion, status: "processing", creditsUsed: 0,
@@ -74,6 +77,7 @@ export const complete = mutation({
     if (!generation) throw new Error("Generation not found");
     const user = await ctx.db.get(generation.userId);
     if (!user || user.clerkId !== identity.subject) throw new Error("Generation ownership check failed");
+    if (generation.status !== "processing" || !args.r2Keys.length || args.r2Keys.length > 4 || args.r2Keys.some(key => !key.startsWith(`generations/user_${user.clerkId}/gen_${generation._id}_`))) throw new Error("Invalid generation completion");
     const createdAt = Date.now();
     for (const r2Key of args.r2Keys) await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key, view: args.view ?? "front", selected: false, createdAt });
     await ctx.db.insert("modelUsage", {
@@ -92,6 +96,7 @@ export const appendSideResult = mutation({
     if (!generation) throw new Error("Generation not found");
     const user = await ctx.db.get(generation.userId);
     if (!user || user.clerkId !== identity.subject) throw new Error("Generation ownership check failed");
+    if (generation.status !== "completed" || !args.r2Key.startsWith(`generations/user_${user.clerkId}/gen_${generation._id}_side_`)) throw new Error("Invalid side result");
     const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
     if (!upload || upload.userId !== user._id || upload.type !== "side") throw new Error("Side upload not found");
     const existing = await ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect();
@@ -103,6 +108,29 @@ export const appendSideResult = mutation({
       taskType: "hair_try_on_side", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
     });
     return resultId;
+  },
+});
+
+export const quotaMine = query({
+  args: {},
+  handler: async ctx => {
+    const identity = await requireIdentity(ctx);
+    const user = await ctx.db.query("users").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique();
+    if (!user) return { limit: DAILY_GENERATION_LIMIT, used: 0, remaining: DAILY_GENERATION_LIMIT, resetAt: quotaDay().resetAt, timezone: "Asia/Shanghai" };
+    return readQuota(ctx, user._id);
+  },
+});
+
+export const startSide = mutation({
+  args: { generationId: v.id("generations"), uploadKey: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await requireIdentity(ctx);
+    const generation = await ctx.db.get(args.generationId);
+    const user = generation ? await ctx.db.get(generation.userId) : null;
+    if (!generation || !user || user.clerkId !== identity.subject || generation.status !== "completed") throw new Error("Result not found");
+    const upload = await ctx.db.query("uploads").withIndex("by_r2_key", q => q.eq("r2Key", args.uploadKey)).unique();
+    if (!upload || upload.userId !== user._id || upload.type !== "side") throw new Error("Side upload not found");
+    await reserveGeneration(ctx, user._id);
   },
 });
 
@@ -172,6 +200,7 @@ export const fail = mutation({
     if (!generation) return;
     const user = await ctx.db.get(generation.userId);
     if (!user || user.clerkId !== identity.subject) throw new Error("Generation ownership check failed");
+    if (generation.status !== "processing" && generation.status !== "queued") return;
     const now = Date.now();
     await ctx.db.insert("modelUsage", {
       userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,

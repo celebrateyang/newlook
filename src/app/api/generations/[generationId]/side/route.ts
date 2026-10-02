@@ -1,3 +1,4 @@
+import { quotaErrorResponse } from "@/lib/generations/quota";
 import { randomUUID } from "node:crypto";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -28,6 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ gen
     const style = getStarterHairstyle(owned.data.hairstyle.slug);
     if (!style) return NextResponse.json({ error: "Unsupported hairstyle" }, { status: 400 });
     const env = imageGenerationEnv();
+    await owned.convex.mutation(api.generations.startSide, { generationId: owned.data.generation._id, uploadKey: body.data.uploadKey });
     const r2 = createR2Client();
     const source = await r2.send(new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: body.data.uploadKey }));
     if (!source.Body || !source.ContentType || !["image/jpeg", "image/png", "image/webp"].includes(source.ContentType)) throw new Error("Side image is unavailable or unsupported");
@@ -51,6 +53,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ gen
     const url = await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }), { expiresIn: 3600 });
     return NextResponse.json({ id: resultId, view: "side", url, promptVersion: HAIR_TRY_ON_PROMPT_VERSION });
   } catch (error) {
+    const quotaResponse = quotaErrorResponse(error);
+    if (quotaResponse) return quotaResponse;
     console.error("Side generation failed", error);
     return NextResponse.json({ error: process.env.NODE_ENV === "development" && error instanceof Error ? error.message : "Could not generate the side preview" }, { status: 500 });
   }

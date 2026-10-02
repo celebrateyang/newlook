@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as generationQuota from "../generationQuota.js";
 import type * as generations from "../generations.js";
 import type * as hairstyleCatalog from "../hairstyleCatalog.js";
 import type * as hairstyles from "../hairstyles.js";
+import type * as shares from "../shares.js";
 import type * as uploads from "../uploads.js";
 
 import type {
@@ -20,9 +22,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  generationQuota: typeof generationQuota;
   generations: typeof generations;
   hairstyleCatalog: typeof hairstyleCatalog;
   hairstyles: typeof hairstyles;
+  shares: typeof shares;
   uploads: typeof uploads;
 }>;
 

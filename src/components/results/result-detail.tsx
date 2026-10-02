@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Check, Download, Expand, FileDown, ImagePlus, LoaderCircle, Minus, Package, Plus, RotateCcw, Scissors, X } from "lucide-react";
 import type { SalonGuide } from "@/lib/hairstyles/salon-guides";
+import { ShareControls } from "@/components/results/share-controls";
+import { QuotaNotice } from "@/components/results/quota-notice";
 
 type ResultView = { id: string; view: "front" | "side"; url: string };
 type ResultData = {
@@ -117,6 +119,7 @@ export function ResultDetail({ generationId }: { generationId: string }) {
   const hasSide = data.views.some((view) => view.view === "side");
   const isReferenceTransfer = Boolean(data.reference);
   return <><div className="mx-auto max-w-7xl px-5 pb-20 pt-8 sm:px-8 lg:px-12">
+    <QuotaNotice refreshKey={String(sideBusy)} />
     <div className="flex flex-col gap-5 lg:flex-row lg:items-end">
       <Link href="/#discovery-heading" className="order-1 inline-flex w-fit items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink/45 transition hover:text-ink focus-visible:text-ink lg:order-2 lg:mb-3 lg:ml-auto"><ArrowLeft className="size-4" /> Back to styles</Link>
       <div className="order-2 lg:order-1"><p className="eyebrow mb-2">YOUR SELECTED LOOK</p><h1 className="font-display text-4xl tracking-tight sm:text-5xl">{data.style.name}</h1></div>
@@ -129,6 +132,7 @@ export function ResultDetail({ generationId }: { generationId: string }) {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div className="flex rounded-full bg-clay/60 p-1"><ViewTab active={activeView === "front"} onClick={() => { setActiveView("front"); setZoom(1); }}>Front</ViewTab><ViewTab active={activeView === "side"} disabled={!hasSide} onClick={() => { setActiveView("side"); setZoom(1); }}>Side</ViewTab></div>{active && <a className="inline-flex items-center gap-2 text-sm font-bold text-coral hover:text-ink" href={`/api/generations/${generationId}/download?resultId=${encodeURIComponent(active.id)}`}><Download className="size-4" /> Download this view (JPG)</a>}</div>
         {active ? <button type="button" onClick={openLightbox} className="group relative h-[min(68vh,720px)] min-h-[420px] w-full cursor-zoom-in overflow-hidden rounded-[1.2rem] bg-ink/[.06]" aria-label="Open image in full-screen viewer"><img src={active.url} alt={`${data.style.name} ${active.view} preview`} className="size-full object-contain object-center" /><span className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-ink shadow-sm backdrop-blur transition group-hover:bg-coral group-hover:text-white"><Expand className="size-3.5" /> Open full screen</span></button> : <div className="grid min-h-[420px] place-items-center rounded-[1.2rem] bg-clay/40 text-sm text-ink/45">No image is available.</div>}
 
+        {active && <ShareControls key={active.id} generationId={generationId} resultId={active.id} />}
         {!isReferenceTransfer && <div className="mt-6 border-t border-ink/10 pt-6">
           <input ref={sideInputRef} type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => void addSidePhoto(event.target.files?.[0])} />
           <div className="flex flex-col justify-between gap-4 rounded-2xl bg-clay/45 p-5 sm:flex-row sm:items-center"><div><p className="font-bold">{hasSide ? "Replace the side view" : "Add an accurate side view"}</p><p className="mt-1 max-w-xl text-sm leading-6 text-ink/50">Upload a real side photo and we’ll apply this hairstyle from the same angle. Optional, but more useful for your stylist.</p></div><button type="button" disabled={sideBusy} onClick={() => sideInputRef.current?.click()} className="button-secondary shrink-0 disabled:cursor-wait disabled:opacity-60">{sideBusy ? <LoaderCircle className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}{sideBusy ? "Creating side view…" : hasSide ? "Replace photo" : "Add side photo"}</button></div>
