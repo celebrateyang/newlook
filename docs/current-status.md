@@ -53,6 +53,8 @@ Last updated: 2026-10-02
 
 ## Verification already completed
 
+- Localized collage follow-up (2026-10-02): gallery preview and public Open Graph/X image URLs now explicitly include the page locale. Chinese images use “哪款发型最适合我？” and “帮我选发型 · 给 A–F 评分”; English images retain English copy. Removed the sign-in message from preview images in both languages. Bundled Noto Sans SC outlines avoid server-font dependencies. Regression checks cover both languages across all 2–6 image layouts and the absence of sign-in copy. Publishing this Web change updates existing sharing URLs without recreating polls.
+
 - Collage lettering follow-up (2026-10-02): the public preview SVG used generic system-font text, which rendered as missing-glyph boxes on the reported Vercel deployment. Replaced all fixed preview lettering and A–F labels with bundled Manrope glyph outlines (OFL license included), removing runtime font lookup/download dependencies. Regression coverage checks visible, distinct path-rendered letters and all 2–6 image layouts; generated collages were visually inspected. This Web fix requires publishing the updated code to Vercel; preview copy remains English.
 
 - Automatic deployment configuration (2026-10-02): added `vercel.json` and `pnpm build:vercel` using Convex's integrated deploy/build command, with the selected backend URL injected as `NEXT_PUBLIC_CONVEX_URL`. Vercel will publish only after both steps succeed. Activation requires a Production-scoped `CONVEX_DEPLOY_KEY` in Vercel and the documented dashboard Build Command setup; branch previews require a separate Preview-scoped key. Repository configuration has been checked, but no Vercel dashboard configuration or automatic push-triggered deployment has been verified from this session.

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { getPublicPoll } from "@/lib/shares/polls";
-import { getTranslations } from "@/lib/i18n/server";
+import { getTranslations, getLocale } from "@/lib/i18n/server";
 import Link from "@/components/localized-link";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { PollRating } from "@/components/results/poll-rating";
@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations(), { token } = await params, poll = await loadPoll(token);
   const title = poll?.title || t("Which hairstyle suits me best?");
   const description = t("Help me choose my next hairstyle. Rate these looks without signing in.");
-  const image = `/api/polls/${token}/image`;
+  const image = `/api/polls/${token}/image?locale=${await getLocale()}`;
   return { title, description, robots: { index: false, follow: false }, openGraph: { title, description, images: [{ url: image, width: 1200, height: 630, type: "image/jpeg", alt: t("Hairstyle comparison preview") }] }, twitter: { card: "summary_large_image", title, description, images: [image] } };
 }
 export default async function PollPage({ params }: Props) {
