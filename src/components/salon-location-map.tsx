@@ -1,21 +1,26 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Map as LeafletMap, Marker } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useI18n } from "@/components/i18n-provider";
 import { locationFromMap, type SalonLocation } from "../../shared/salon-location";
+import { regionMapView } from "../../shared/regions/map-view";
+import type { RegionSelection } from "../../shared/regions";
 
 export type MapStatus = "loading" | "ready" | "error";
 
-export default function SalonLocationMap({ value, onPick, onStatus }: {
+export default function SalonLocationMap({ value, region, onPick, onStatus }: {
   value: SalonLocation | null; onPick: (pin: SalonLocation) => void; onStatus: (status: MapStatus) => void;
+  region: RegionSelection;
 }) {
   const { t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const currentValue = useRef(value);
+  const { provinceCode, cityCode, districtCode } = region;
+  const initialView = useMemo(() => regionMapView({ provinceCode, cityCode, districtCode }), [provinceCode, cityCode, districtCode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -25,8 +30,9 @@ export default function SalonLocationMap({ value, onPick, onStatus }: {
     void import("leaflet").then(L => {
       if (cancelled || !container.current) return;
       const pin = currentValue.current;
+      const view = initialView;
       const map = L.map(container.current, { scrollWheelZoom: false, attributionControl: true, worldCopyJump: true, zoomControl: false })
-        .setView(pin ? [pin.latitude, pin.longitude] : [35, 105], pin ? 18 : 4);
+        .setView(pin ? [pin.latitude, pin.longitude] : view ? [view.latitude, view.longitude] : [35, 105], pin ? 18 : view?.zoom ?? 4);
       mapRef.current = map;
       L.control.zoom({ position: "topright", zoomInTitle: t("Zoom in"), zoomOutTitle: t("Zoom out") }).addTo(map);
       const tiles = L.tileLayer(process.env.NEXT_PUBLIC_OSM_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -57,7 +63,7 @@ export default function SalonLocationMap({ value, onPick, onStatus }: {
       resize.observe(container.current);
     }).catch(() => { if (!cancelled) onStatus("error"); });
     return () => { cancelled = true; clearTimeout(loadingTimer); resize?.disconnect(); mapRef.current?.remove(); mapRef.current = null; markerRef.current = null; };
-  }, [onPick, onStatus, t]);
+  }, [initialView, onPick, onStatus, t]);
 
   useEffect(() => {
     currentValue.current = value;
@@ -72,6 +78,7 @@ export default function SalonLocationMap({ value, onPick, onStatus }: {
   }, [value]);
 
   return <div className="space-y-3">
+    {!value && initialView && <p role="status" className="text-xs leading-6 text-ink/60">{t("Map starts near {region}. Zoom in and choose your salon entrance; this area center is not a saved location.", { region: initialView.name })}</p>}
     <div ref={container} role="region" aria-label={t("Choose your salon location on the map")} aria-describedby="salon-map-instructions" className="relative z-0 h-72 w-full rounded-xl border border-ink/15 bg-clay sm:h-80" />
     <p id="salon-map-instructions" className="text-xs leading-6 text-ink/60">{t("Zoom in to street level, then tap the salon entrance or drag the pin. With a keyboard, focus the map, use arrow keys to move and + / - to zoom, then choose the map center.")}</p>
     <button type="button" className="text-sm font-semibold underline underline-offset-4" onClick={() => {

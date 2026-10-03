@@ -1,0 +1,14 @@
+{
+  "source": "Wikidata P442 (China division code), P625 (coordinate location), Chinese label",
+  "license": "CC0-1.0",
+  "retrievedAt": "2026-10-03T08:41:41.977Z",
+  "snapshotSha256": "8de2b7c0e3ecc09bae75559d5a079c58bb660323c2676681b15446c2ce7bd542",
+  "outputSha256": "36b4c348baf6168f56d0084d50ef1b235f79ea919e4d1d8fb28ead109cbfe45a",
+  "counts": {
+    "province": 31,
+    "city": 355,
+    "district": 2711
+  },
+  "coordinateSystem": "WGS84",
+  "purpose": "Approximate initial map view only; not salon coordinates or administrative boundaries"
+}

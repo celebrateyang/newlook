@@ -14,6 +14,8 @@ Salon locations use province/city/district (or town) selectors, with server-vali
 
 Optional salon pins use browser geolocation and a lazily opened Leaflet/OpenStreetMap map, with no paid service or key. Device location requires HTTPS (localhost also works) and user permission. Applicants must confirm the point; GPS accuracy belongs only to unadjusted device coordinates. Pins use WGS84 and remain private with the application, with a server-generated confirmation timestamp. Editing the region/street address clears the pin. Address-only saves, coordinate replacement/removal and withdrawal remain supported.
 
+Without a salon pin, the map starts near the selected district/town using local CC0 Wikidata points, falling back to city/province when unavailable. This does not select or save a salon location. Existing pins take precedence; no street-address lookup is performed. See [map starting point coverage and refresh](shared/regions/CENTERS.md).
+
 OSM tiles load directly from the browser only when the map is opened, with visible attribution, normal referrers and browser caching. No geocoding, automatic search, tile proxy, bulk download, offline map or service worker cache is used. `NEXT_PUBLIC_OSM_TILE_URL` can override the tile template; any replacement must permit this use and have appropriate attribution. Public OSM tiles are best-effort and may block heavy use. Mainland device positioning, map connectivity and detail coverage require real-device testing; do not claim unlimited free hosted maps. See [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/). Customer matching and navigation are not implemented.
 
 ## Stack

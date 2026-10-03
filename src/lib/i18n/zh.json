@@ -537,5 +537,6 @@
   "Ask a friend to rate your look": "请朋友评分，不能给自己的发型评分。",
   "Your try-on": "你的试戴效果",
   "Example result": "效果示例",
-  "See the change before the cut": "剪发之前，先看效果"
+  "See the change before the cut": "剪发之前，先看效果",
+  "Map starts near {region}. Zoom in and choose your salon entrance; this area center is not a saved location.": "地图已显示{region}附近。请放大并选择门店入口；地区中心点不会保存为门店位置。"
 }

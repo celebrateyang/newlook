@@ -5,12 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/i18n-provider";
 import { locationFromDevice, type SalonLocation } from "../../shared/salon-location";
 import type { MapStatus } from "./salon-location-map";
+import type { RegionSelection } from "../../shared/regions";
 
 const LocationMap = dynamic(() => import("./salon-location-map"), { ssr: false });
 const actionClass = "rounded-full border border-ink/20 px-4 py-2 text-sm font-semibold transition hover:border-coral hover:text-coral disabled:opacity-50";
 
-export function SalonLocationPicker({ value, onChange, disabled }: {
+export function SalonLocationPicker({ value, onChange, disabled, region }: {
   value: SalonLocation | null; onChange: (pin: SalonLocation | null) => void; disabled: boolean;
+  region: RegionSelection;
 }) {
   const { t } = useI18n();
   const [draft, setDraft] = useState<SalonLocation | null>(value);
@@ -49,7 +51,7 @@ export function SalonLocationPicker({ value, onChange, disabled }: {
     </div>
     {error && <p role="alert" className="text-sm leading-6 text-red-700">{error}</p>}
     {showMap && <>
-      <LocationMap value={draft} onPick={onPick} onStatus={setMapStatus} />
+      <LocationMap value={draft} region={region} onPick={onPick} onStatus={setMapStatus} />
       {mapStatus !== "ready" && <p role="status" className="text-xs leading-6 text-ink/60">{t(mapStatus === "loading" ? "Loading map…" : "Map tiles could not be fully loaded. You can still confirm your device location or save your address first.")}</p>}
     </>}
     {draft && <div className="space-y-3">
