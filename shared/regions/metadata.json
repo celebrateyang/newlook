@@ -1,0 +1,14 @@
+{
+  "version": "cn-division-2026.0.1-88f2021-v1",
+  "source": "https://raw.githubusercontent.com/kk-418/cn-division/88f2021ea21769bdb95d93699d8a625fcd9165ef/dist/code/pca.json",
+  "revision": "88f2021ea21769bdb95d93699d8a625fcd9165ef",
+  "upstreamVersion": "2026.0.1",
+  "upstreamCommitDate": "2026-09-02",
+  "upstreamDeclaredSource": "https://dmfw.mca.gov.cn/9095/xzqh/getList",
+  "sourceSha256": "153f67889222d83323c63220bd6e3625221aac2dfd7f3ebc731f7156ac8ee94b",
+  "counts": {
+    "provinces": 31,
+    "cityNodes": 371,
+    "areaNodes": 2935
+  }
+}

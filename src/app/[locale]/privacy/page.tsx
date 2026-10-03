@@ -19,7 +19,7 @@ export default async function PrivacyPage() {
   if (await getLocale() === "zh") return <InfoPage eyebrow="隐私政策" title="认真保护你的照片。"><ChineseLegalContent kind="privacy" /></InfoPage>;
   return (
     <InfoPage eyebrow="PRIVACY POLICY" title="Your photos deserve careful handling.">
-      <p className="text-sm font-semibold text-ink/45">Effective date: October 2, 2026</p>
+      <p className="text-sm font-semibold text-ink/45">Effective date: October 3, 2026</p>
       <p>
         This Privacy Policy explains how newself (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, shares, and protects information when you use <Link className="font-semibold text-ink underline underline-offset-4" href="/">newself.cc</Link> and its AI hairstyle advisory features.
       </p>
@@ -28,11 +28,12 @@ export default async function PrivacyPage() {
         <h2 className={headingClass}>1. Information we collect</h2>
         <ul className={listClass}>
           <li><strong className="text-ink">Account information.</strong> Your user ID, name, email address, profile image, and sign-in method.</li>
-          <li><strong className="text-ink">Stylist applications.</strong> The name, mainland China phone number, optional WeChat ID, service area, salon and address, experience, specialties, optional portfolio link and introduction, and consent record you submit. Applications stay private and are used for recruitment assessment and contact. Submission does not publish a profile. You can update or withdraw your application on the stylist page; withdrawal deletes the application from the active database.</li>
+          <li><strong className="text-ink">Stylist applications.</strong> The name, mainland China phone number, optional WeChat ID, salon province/city/district or town and corresponding region codes, salon name and street address, experience, specialties, optional portfolio link and introduction, and consent record you submit. Applications stay private and are used for recruitment assessment and contact. Submission does not publish a profile. You can update or withdraw your application on the stylist page; withdrawal deletes the application from the active database.</li>
           <li><strong className="text-ink">Google sign-in information.</strong> If you choose Google Sign-In, we receive only the basic account information you authorize, such as your name, email address, profile image, and Google account identifier. We do not request Gmail, Google Drive, contacts, calendars, or other Google content.</li>
           <li><strong className="text-ink">Photos and hairstyle content.</strong> Selfies, reference images, hairstyle selections, preferences, prompts, generated images, and salon-guide content you submit or create.</li>
           <li><strong className="text-ink">Analysis and result data.</strong> Visible face and hair characteristics, recommendations, generation status, selected results, and technical AI-request information. We do not currently use face recognition or face embeddings to identify you.</li>
           <li><strong className="text-ink">Technical data.</strong> IP address, browser and device information, timestamps, request logs, errors, and essential cookies processed by us or our hosting and security providers.</li>
+          <li><strong className="text-ink">Optional salon location.</strong> When you confirm a salon point, we store its latitude/longitude, coordinate system, selection source, device accuracy when applicable, and confirmation time with your private application. Device location is requested only after you press the location button and grant browser permission. You may submit an address without coordinates, replace or remove a location, or withdraw the application. Opening the map connects your browser to the OpenStreetMap tile service, which receives your IP, site referrer and the map area being viewed; we do not send your name, phone number or full application to that service.</li>
           <li><strong className="text-ink">Communications.</strong> Information you send when requesting support, deletion, or providing feedback.</li>
         </ul>
       </section>

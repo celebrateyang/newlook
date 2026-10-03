@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+.salon-map-pin {
+  display: block;
+  width: 28px;
+  height: 28px;
+  background: #ea7762;
+  border: 3px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 8px #0005;
+}
+.salon-map-pin::after {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin: 7px;
+  border-radius: 50%;
+  background: white;
+}
+
 :root { --ivory:#f7f4ed; --ink:#25231f; --coral:#e86650; --sage:#8ba386; --deep-sage:#486148; --butter:#f2dea3; --clay:#e9dfd3; }
 @theme inline {
   --color-ivory:var(--ivory); --color-ink:var(--ink); --color-coral:var(--coral); --color-sage:var(--sage);

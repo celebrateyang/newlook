@@ -1,6 +1,23 @@
 # newself Current Status
 
-Last updated: 2026-10-02
+Last updated: 2026-10-03
+
+## Free salon map pins — 2026-10-03
+
+- Added optional browser geolocation and a lazily opened Leaflet/OSM map to stylist applications. No paid map API, key, search, reverse geocoding or automatic location request is used. A pin must be explicitly confirmed; keyboard users can pan/zoom and choose the map center. Changing region/street address clears the pin. Address-only submission remains available on denial, timeout or map failure.
+- Stores WGS84 latitude/longitude, selection source, device accuracy when applicable and a server-generated confirmation time privately with the owner application. Manually moved pins have no GPS-accuracy claim. Coordinates can be replaced/removed; withdrawal deletes them with the application. Backend validation rejects invalid ranges and misleading accuracy. Optional schema fields retain deployment compatibility; legacy address changes clear stale coordinates.
+- Enabled same-origin browser geolocation through Permissions-Policy. Updated English/Chinese privacy disclosures for precise salon coordinates and the IP/referrer/map area sent to the OSM tile service when opened. Normal browser caching/referrers and visible attribution are preserved; tiles are not proxied or prefetched. The public tile URL is configurable.
+- Public OSM tiles are best-effort and capacity-limited. Mainland map connectivity/detail coverage and device geolocation require real-device testing. Confirmed points are applicant assertions, not verified premises. Matching, navigation and appointments remain future work. Publish the compatible Convex backend and Web together.
+- Verification: Web and Convex type checks, lint, 22 targeted tests and the production build passed. Desktop/mobile browser checks loaded real OSM tiles and covered pin confirmation/removal, address-change clearing, denied location permission and form submission using simulated geolocation/API responses. Real-device geolocation and a real authenticated submission remain unverified. This change has not been deployed.
+
+## Structured stylist locations — 2026-10-03
+
+- Replaced free-text service city/area with mandatory province → city → district/county/town selectors for mainland China. Parent changes clear dependent choices; municipalities, directly administered counties and cities without districts are handled explicitly. Salon name and street/building address remain separate.
+- Browser, Web API and Convex share one versioned, vendored location dataset. Saves validate the full hierarchy and derive names server-side, recording `countryCode`, province/city/district codes, canonical names and dataset version. Added a private region-filtering index; ownership checks still apply. Schema additions are optional for compatibility, while new submissions require valid regions. The previously published form is supported only for unambiguous canonical city/area name pairs.
+- Coverage follow-up: replaced the initial NBS 2023 snapshot with MIT-licensed `cn-division` 2026.0.1, pinned to its 2026-09-02 commit. Upstream uses the MCA public interface plus maintained supplemental functional areas. Contains 31 mainland provinces, 371 raw city nodes and 2,935 area nodes, with 12-digit town/street codes preserved. It includes newer administrative entries but is not a guarantee of exhaustive current coverage or a nationwide street/salon-coordinate dataset. Source/checksum/counts are recorded; `pnpm regions:update` performs a reviewed pinned refresh with validation and a change summary. The MCA endpoint request failed from this environment; the pinned open-source download succeeded. No external API is called by the live form.
+- This prepares region filtering. Distance ranking still requires a map provider, a confirmed salon coordinate and explicit coordinate-system handling; no geocoding, public matching or map credential has been added.
+- Local validation does not verify signed-in production saves. Publish Convex and Web together via the existing integrated deployment setup.
+- Verification: Web and standalone Convex typechecks, lint and all 17 targeted location/application/localization tests passed. Tests cover all selectable mainland regions, parent resets, special administrative hierarchies, refreshed entries, 12-digit codes, invalid combinations, server-derived names, region indexing and ownership. No production deployment or real signed-in submission was performed.
 
 ## Mainland China stylist recruitment — 2026-10-02
 

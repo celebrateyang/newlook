@@ -10,6 +10,12 @@ Official site: [newself.cc](https://newself.cc)
 
 Deploy the new `stylistApplications` schema/functions with the Web update. Applicants can manage only their own application and withdraw to delete it. Review received applications privately in the Convex dashboard table `stylistApplications`; no email/WeChat notification or admin approval workflow is configured. Contact details are for recruitment only. Public profiles, appointments, order acceptance and payments are future work.
 
+Salon locations use province/city/district (or town) selectors, with server-validated codes, derived names and a dataset version. Street/building address is entered separately. The shared mainland dataset is pinned to `cn-division`'s 2026.0.1 snapshot, whose upstream source is the MCA public interface; it requires no API key at runtime. See [coverage, provenance and update notes](shared/regions/README.md), including `pnpm regions:update`. Deploy Convex and Web together. Additive optional schema fields support deployment compatibility; all new saves require a valid region.
+
+Optional salon pins use browser geolocation and a lazily opened Leaflet/OpenStreetMap map, with no paid service or key. Device location requires HTTPS (localhost also works) and user permission. Applicants must confirm the point; GPS accuracy belongs only to unadjusted device coordinates. Pins use WGS84 and remain private with the application, with a server-generated confirmation timestamp. Editing the region/street address clears the pin. Address-only saves, coordinate replacement/removal and withdrawal remain supported.
+
+OSM tiles load directly from the browser only when the map is opened, with visible attribution, normal referrers and browser caching. No geocoding, automatic search, tile proxy, bulk download, offline map or service worker cache is used. `NEXT_PUBLIC_OSM_TILE_URL` can override the tile template; any replacement must permit this use and have appropriate attribution. Public OSM tiles are best-effort and may block heavy use. Mainland device positioning, map connectivity and detail coverage require real-device testing; do not claim unlimited free hosted maps. See [OSM tile policy](https://operations.osmfoundation.org/policies/tiles/). Customer matching and navigation are not implemented.
+
 ## Stack
 
 - Next.js App Router, TypeScript and Tailwind CSS
