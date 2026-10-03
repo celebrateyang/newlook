@@ -2,8 +2,15 @@
 
 Last updated: 2026-10-03
 
+## Chinese stylist recruitment copy review — 2026-10-03
+
+- Rewrote only Chinese recruitment-page translations and its metadata around the stylist's value: understanding client goals, demonstrating professional judgment and preparing salon communication. Hero: “让你的专业，成为顾客选择的理由。” The application section invites first-cohort applicants to share specialties and real portfolio work.
+- Retained the recruitment-only status, private application handling, and absence of matching/bookings/orders. English source copy and page structure are unchanged. Chinese copy awaits the user's review before any corresponding English rewrite; no publication was requested.
+
 ## Free salon map pins — 2026-10-03
 
+- Required-location follow-up supersedes the optional/address-only behavior below: submissions and updates now require a confirmed salon coordinate in the browser, shared API schema and Convex validation. Device permission stays optional; manual map selection works without it. New selections clear the previous confirmation, and missing/cleared points block submission with a focused location prompt. Editing region/address still resets the point. Existing records remain readable/withdrawable but must supply coordinates on update; optional storage fields are retained for data compatibility. Both languages and privacy/setup documentation were updated. Publish Web and Convex together; old address-only clients are rejected.
+- Required-location verification: Web/Convex type checks, lint, 21 targeted application/location/map/localization tests and the production build passed. Backend tests reject missing/null coordinates on creation and update without changing existing data, and retain authenticated ownership and coordinate validation. This follow-up has not been deployed or tested with a real signed-in browser submission.
 - Follow-up: opening an unpinned map now starts near the selected district/town using a local CC0 Wikidata WGS84 snapshot. Code/name/hierarchy matching covers 2,711 area nodes; missing coordinates fall back to city/province. Existing confirmed/device pins take precedence. A localized hint distinguishes the approximate area view from a saved salon point. No address lookup request or backend/schema change is involved. See `shared/regions/CENTERS.md` for provenance and refresh instructions.
 - Follow-up verification: typecheck, lint, 14 targeted region/map/location/localization tests and the production build passed. Tests cover Yangpu's initial view, missing/new district fallback, invalid hierarchy and a finite view for every selectable area. This follow-up has not been deployed or visually checked in a signed-in browser.
 - Added optional browser geolocation and a lazily opened Leaflet/OSM map to stylist applications. No paid map API, key, search, reverse geocoding or automatic location request is used. A pin must be explicitly confirmed; keyboard users can pan/zoom and choose the map center. Changing region/street address clears the pin. Address-only submission remains available on denial, timeout or map failure.

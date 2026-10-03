@@ -8,7 +8,8 @@ import { changeRegion, citiesForProvince, provinces, resolveLegacyRegion } from 
 import { SalonLocationPicker } from "./salon-location-picker";
 
 const specialtyLabels = { cut: "Precision cuts", short: "Short hair", layers: "Layered cuts", perm: "Perms", color: "Hair color", men: "Men's hair", curly: "Natural curls" };
-const empty: StylistApplicationInput = { name: "", phone: "", wechat: "", provinceCode: "", cityCode: "", districtCode: "", salon: "", address: "", location: null, experienceYears: 0, specialties: [], portfolioUrl: "", introduction: "", consent: true };
+type ApplicationDraft = Omit<StylistApplicationInput, "location"> & { location: StylistApplicationInput["location"] | null };
+const empty: ApplicationDraft = { name: "", phone: "", wechat: "", provinceCode: "", cityCode: "", districtCode: "", salon: "", address: "", location: null, experienceYears: 0, specialties: [], portfolioUrl: "", introduction: "", consent: true };
 const inputClass = "mt-2 w-full rounded-xl border border-ink/15 bg-white px-3 py-3 text-sm text-ink outline-none focus:border-coral focus:ring-2 focus:ring-coral/20";
 const buttonClass = "rounded-full bg-coral px-6 py-3 text-sm font-bold text-white transition hover:bg-ink disabled:cursor-wait disabled:opacity-50";
 
@@ -25,6 +26,8 @@ export function StylistApplicationForm({ signedIn, available }: { signedIn: bool
   const [message, setMessage] = useState("");
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const statusRef = useRef<HTMLParagraphElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
+  const changeLocation = useCallback((location: ApplicationDraft["location"]) => setData(current => ({ ...current, location })), []);
   const load = useCallback((signal?: AbortSignal) => {
     return fetch("/api/stylist-application", { cache: "no-store", signal }).then(async response => {
       if (!response.ok) throw new Error();
@@ -49,6 +52,11 @@ export function StylistApplicationForm({ signedIn, available }: { signedIn: bool
     event.preventDefault();
     if (busy) return;
     setError(""); setMessage("");
+    if (!data.location) {
+      setError(t("Select and confirm your salon entrance before submitting."));
+      locationRef.current?.focus();
+      return;
+    }
     const parsed = stylistApplicationSchema.safeParse({ ...data, consent });
     if (!parsed.success) { setError(t("Check your details, select at least one specialty and agree to the application notice.")); return; }
     setBusy(true);
@@ -105,7 +113,7 @@ export function StylistApplicationForm({ signedIn, available }: { signedIn: bool
           <label htmlFor="stylist-address" className="block text-sm font-semibold">{t("Street address and building number")}<span aria-hidden="true" className="ml-1 text-coral">*</span><input id="stylist-address" name="address" required maxLength={200} autoComplete="street-address" placeholder={t("Street, building number, floor / unit")} value={data.address} className={inputClass} onChange={event => setData(current => ({ ...current, address: event.target.value, location: null }))} /></label>
         </div>
       </fieldset>
-      <SalonLocationPicker key={`${data.provinceCode}:${data.cityCode}:${data.districtCode}:${data.address}`} region={{ provinceCode: data.provinceCode, cityCode: data.cityCode, districtCode: data.districtCode }} value={data.location ?? null} disabled={busy} onChange={location => setData(current => ({ ...current, location }))} />
+      <div ref={locationRef} tabIndex={-1} aria-label={t("Salon location is required")} className="rounded-xl outline-none focus:ring-2 focus:ring-coral"><SalonLocationPicker key={`${data.provinceCode}:${data.cityCode}:${data.districtCode}:${data.address}`} region={{ provinceCode: data.provinceCode, cityCode: data.cityCode, districtCode: data.districtCode }} value={data.location ?? null} disabled={busy} onChange={changeLocation} /></div>
       <label className="block text-sm font-semibold" htmlFor="stylist-experience">{t("Years of experience")}<input id="stylist-experience" name="experienceYears" type="number" min={0} max={60} step={1} required value={Number.isNaN(data.experienceYears) ? "" : data.experienceYears} className={inputClass} onChange={event => setData(current => ({ ...current, experienceYears: event.target.value === "" ? NaN : Number(event.target.value) }))} /></label>
       <fieldset><legend className="mb-3 text-sm font-semibold">{t("Specialties (select at least one)")}</legend><div className="flex flex-wrap gap-3">{stylistSpecialties.map(value => <label key={value} className="flex items-center gap-2 rounded-full border border-ink/15 px-4 py-2 text-sm"><input type="checkbox" className="size-4 accent-coral" checked={data.specialties.includes(value)} onChange={event => setData(current => ({ ...current, specialties: event.target.checked ? [...current.specialties, value] : current.specialties.filter(item => item !== value) }))} />{t(specialtyLabels[value])}</label>)}</div></fieldset>
       <label htmlFor="stylist-introduction" className="block text-sm font-semibold">{t("Tell us about your work (optional)")}<textarea id="stylist-introduction" name="introduction" rows={4} maxLength={1000} value={data.introduction} className={inputClass} onChange={event => setData(current => ({ ...current, introduction: event.target.value }))} /></label>

@@ -8,7 +8,7 @@ const modules = {
   "../convex/_generated/server.js": () => import("../convex/_generated/server"),
   "../convex/stylistApplications.ts": () => import("../convex/stylistApplications"),
 };
-const application: StylistApplicationInput = { name: " 小林 ", phone: "13800138000", wechat: "", provinceCode: "31", cityCode: "3101", districtCode: "310104", salon: "测试门店", address: "测试路 10 号 2 楼", experienceYears: 5, specialties: ["cut", "short"], portfolioUrl: "https://example.com/work", introduction: "短发设计", consent: true };
+const application: StylistApplicationInput = { name: " 小林 ", phone: "13800138000", wechat: "", provinceCode: "31", cityCode: "3101", districtCode: "310104", salon: "测试门店", address: "测试路 10 号 2 楼", location: { latitude: 31.2, longitude: 121.4, coordinateSystem: "WGS84", source: "map" }, experienceYears: 5, specialties: ["cut", "short"], portfolioUrl: "https://example.com/work", introduction: "短发设计", consent: true };
 
 test("applications require authentication for every read and mutation", async () => {
   const t = convexTest(schema, modules);
@@ -74,7 +74,7 @@ test("town-level salon applications retain the full source code", async () => {
   expect(await owner.query(api.stylistApplications.mine, {})).toMatchObject({ city: "东莞市", district: "东城街道", districtCode: "441900003000" });
 });
 
-test("optional coordinates persist privately, can be replaced or removed and get a server timestamp", async () => {
+test("required coordinates persist privately, can be replaced and get a server timestamp", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({ subject: "located-stylist" });
   const pin = { latitude: 31.2, longitude: 121.4, coordinateSystem: "WGS84" as const, source: "geolocation" as const, accuracyMeters: 10 };
@@ -83,26 +83,28 @@ test("optional coordinates persist privately, can be replaced or removed and get
   expect(saved?.location).toMatchObject(pin);
   expect(saved?.location?.confirmedAt).toBeGreaterThan(0);
   expect(await t.withIdentity({ subject: "other" }).query(api.stylistApplications.mine, {})).toBeNull();
-  await owner.mutation(api.stylistApplications.submit, { ...application, name: "Updated name" });
+  await owner.mutation(api.stylistApplications.submit, { ...application, location: pin, name: "Updated name" });
   expect((await owner.query(api.stylistApplications.mine, {}))?.location).toEqual(saved?.location);
   await owner.mutation(api.stylistApplications.submit, { ...application, location: { latitude: 31.21, longitude: 121.41, coordinateSystem: "WGS84", source: "map" } });
   expect((await owner.query(api.stylistApplications.mine, {}))?.location).toMatchObject({ latitude: 31.21, source: "map" });
   expect((await owner.query(api.stylistApplications.mine, {}))?.location).not.toHaveProperty("accuracyMeters");
-  await owner.mutation(api.stylistApplications.submit, { ...application, location: null });
-  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toBeNull();
+  await expect(owner.mutation(api.stylistApplications.submit, { ...application, location: null })).rejects.toThrow("INVALID_APPLICATION");
+  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toMatchObject({ latitude: 31.21, source: "map" });
 });
 
-test("address-only saves work and legacy address changes clear stale coordinates", async () => {
+test("new and existing applications reject address-only submissions, including address changes", async () => {
   const owner = convexTest(schema, modules).withIdentity({ subject: "located-stylist" });
-  await owner.mutation(api.stylistApplications.submit, application);
-  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toBeNull();
+  for (const location of [undefined, null]) {
+    await expect(owner.mutation(api.stylistApplications.submit, { ...application, location })).rejects.toThrow("INVALID_APPLICATION");
+  }
+  expect(await owner.query(api.stylistApplications.mine, {})).toBeNull();
   const location = { latitude: 31.2, longitude: 121.4, coordinateSystem: "WGS84" as const, source: "map" as const };
   await owner.mutation(api.stylistApplications.submit, { ...application, location });
-  await owner.mutation(api.stylistApplications.submit, { ...application, address: "另一个门店地址" });
-  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toBeNull();
-  await owner.mutation(api.stylistApplications.submit, { ...application, location });
-  await owner.mutation(api.stylistApplications.submit, { ...application, provinceCode: "33", cityCode: "3301", districtCode: "330106" });
-  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toBeNull();
+  await expect(owner.mutation(api.stylistApplications.submit, { ...application, location: undefined, address: "另一个门店地址" })).rejects.toThrow("INVALID_APPLICATION");
+  await expect(owner.mutation(api.stylistApplications.submit, { ...application, location: null, provinceCode: "33", cityCode: "3301", districtCode: "330106" })).rejects.toThrow("INVALID_APPLICATION");
+  expect((await owner.query(api.stylistApplications.mine, {}))?.location).toMatchObject(location);
+  await owner.mutation(api.stylistApplications.submit, { ...application, address: "另一个门店地址", location: { ...location, latitude: 31.21 } });
+  expect(await owner.query(api.stylistApplications.mine, {})).toMatchObject({ address: "另一个门店地址", location: { latitude: 31.21 } });
 });
 
 test("backend rejects invalid pin ranges and misleading GPS accuracy for map pins", async () => {

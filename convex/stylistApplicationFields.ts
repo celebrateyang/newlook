@@ -12,7 +12,7 @@ export const stylistApplicationSchema = z.object({
   districtCode: z.string().regex(/^\d{6}(\d{6})?$/),
   salon: z.string().trim().min(1).max(100),
   address: z.string().trim().min(1).max(200),
-  location: salonLocationSchema.nullable().optional(),
+  location: salonLocationSchema,
   experienceYears: z.number().int().min(0).max(60),
   specialties: z.array(z.enum(stylistSpecialties)).min(1).max(stylistSpecialties.length).refine(items => new Set(items).size === items.length),
   portfolioUrl: z.union([z.literal(""), z.url().max(500).refine(value => {

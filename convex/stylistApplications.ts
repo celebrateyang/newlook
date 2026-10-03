@@ -28,8 +28,7 @@ export const submit = mutation({
     const addressChanged = existing && (existing.address !== parsed.data.address || existing.provinceCode !== region.provinceCode || existing.cityCode !== region.cityCode || existing.districtCode !== region.districtCode);
     const pin = parsed.data.location;
     const samePin = pin && existing?.location && pin.latitude === existing.location.latitude && pin.longitude === existing.location.longitude && pin.source === existing.location.source && pin.accuracyMeters === existing.location.accuracyMeters;
-    const location = pin === undefined ? (addressChanged ? null : existing?.location ?? null)
-      : pin === null ? null : { ...pin, confirmedAt: samePin && !addressChanged ? existing!.location!.confirmedAt : now };
+    const location = { ...pin, confirmedAt: samePin && !addressChanged ? existing!.location!.confirmedAt : now };
     const data = { ...parsed.data, ...region, location, status: "received" as const, consentVersion: "stylist-recruitment-v1", consentAt: now, updatedAt: now };
     if (existing) {
       await ctx.db.patch(existing._id, data);
