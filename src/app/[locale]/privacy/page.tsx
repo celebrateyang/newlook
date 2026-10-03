@@ -3,8 +3,10 @@ import Link from "@/components/localized-link";
 import { InfoPage } from "@/components/info-page";
 import { ChineseLegalContent } from "@/components/legal-zh";
 import { getLocale, getTranslations } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo/site";
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (await getLocale() === "zh") return pageMetadata("zh", "/zh/privacy");
   const t = await getTranslations();
   return {
   title: t("Privacy Policy"),

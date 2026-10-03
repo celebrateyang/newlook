@@ -2,6 +2,14 @@
 
 Last updated: 2026-10-03
 
+## Chinese SEO and GEO foundation — 2026-10-03
+
+- Added distinct Chinese metadata for the six public page types, official-domain canonicals, reciprocal language alternates, Open Graph/X previews and snippet controls. Fixed duplicate brand suffixes when page metadata inherits the layout title template.
+- Added server-rendered Chinese homepage product facts, four workflow steps and eight visible FAQs. Organization, WebSite, WebPage, SoftwareApplication, HowTo and FAQPage JSON-LD use the same visible facts; no fabricated ratings or promised salon outcomes.
+- Added public-only bilingual sitemap, shared crawler policy and supplemental Chinese `llms.txt`, exempt from locale redirects. Private results, galleries, login and revocable sharing pages are noindex; the duplicate upload tool is noindex/follow. Existing access controls are unchanged.
+- See [implementation and launch verification](seo-geo.md). This is the initial metadata/crawl/content foundation; hairstyle topic pages and a blog remain future content work. No publication, webmaster submission, production crawler/WAF verification or ranking/AI citation verification has been performed.
+- Verification: `pnpm typecheck`, `pnpm lint`, the production build and 10 targeted SEO/localization tests passed. Development HTML checks covered all six Chinese public page types, personal/upload/login index controls and three crawl endpoints. Local production-server checks confirmed homepage JSON-LD matches visible answers, private results remain noindex, and all three discovery endpoints return 200 without redirects. Desktop and 390px browser checks confirmed the added content renders with one H1, eight FAQs and no horizontal overflow.
+
 ## Chinese stylist recruitment copy review — 2026-10-03
 
 - Rewrote only Chinese recruitment-page translations and its metadata around the stylist's value: understanding client goals, demonstrating professional judgment and preparing salon communication. Hero: “让你的专业，成为顾客选择的理由。” The application section invites first-cohort applicants to share specialties and real portfolio work.

@@ -3,10 +3,12 @@ import { auth } from "@clerk/nextjs/server";
 import { ArrowDown, Scissors, Sparkles, MessageCircle } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { StylistApplicationForm } from "@/components/stylist-application-form";
-import { getTranslations } from "@/lib/i18n/server";
+import { getLocale, getTranslations } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo/site";
 import Link from "@/components/localized-link";
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (await getLocale() === "zh") return pageMetadata("zh", "/zh/stylists");
   const t = await getTranslations();
   return { title: t("Join as a stylist"), description: t("Join newself's first stylist recruitment in mainland China. Help turn hairstyle ideas into a real salon plan.") };
 }

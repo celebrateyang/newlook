@@ -74,6 +74,8 @@ X sharing pre-fills the message and link. Facebook shares the link preview; its 
 
 ## Languages
 
+Chinese SEO/GEO metadata, public crawl endpoints, content maintenance and post-publication webmaster checks are documented in [docs/seo-geo.md](docs/seo-geo.md).
+
 English and Simplified Chinese are available at `/en` and `/zh`. The header language selector preserves the current page and remembers the choice. Unprefixed page links select the saved language, then the browser language; API and asset paths remain unchanged.
 
 UI translations live in `src/lib/i18n/zh.json`, with English source text as the fallback. Chinese analysis prompts and salon instructions are supported; downloaded PDF guides and salon packs currently retain English text and are labeled accordingly. Add future locales through `src/lib/i18n/locale.ts`, the translation loader and the language selector.

@@ -1,4 +1,5 @@
-import { getTranslations } from "@/lib/i18n/server";
+import { getLocale, getTranslations } from "@/lib/i18n/server";
+import { ChineseHairstyleInfo } from "@/components/chinese-hairstyle-info";
 import Link from "@/components/localized-link";
 import { connection } from "next/server";
 import { ArrowRight, Check, Scissors, ShieldCheck, Sparkles } from "lucide-react";
@@ -8,6 +9,7 @@ import { getHomeHistory } from "@/lib/home/history";
 
 export default async function Home() {
   const t = await getTranslations();
+  const locale = await getLocale();
   await connection();
   const history = await getHomeHistory().catch((error) => {
     console.error("Could not load homepage history", error);
@@ -26,6 +28,7 @@ export default async function Home() {
     <section className="px-5 py-20 sm:px-8 lg:px-12 lg:py-28" id="how-it-works"><div className="mx-auto max-w-7xl"><div className="grid gap-10 lg:grid-cols-[.85fr_1.15fr]"><div><p className="eyebrow mb-5">{t("WHY NEWSELF")}</p><h2 className="font-display text-5xl leading-[.96] tracking-tight sm:text-6xl">{t("A preview is useful.")}<br />{t("A decision is better.")}</h2><p className="mt-6 max-w-md text-lg leading-8 text-ink/55">{t("newself explains why a style suits you and whether your current hair can realistically achieve it.")}</p></div><div className="grid gap-4 sm:grid-cols-3"><ValueCard icon={<Sparkles />} number="01" title={t("Understand")} copy={t("We read visible face proportions, length, density and texture.")} /><ValueCard icon={<Scissors />} number="02" title={t("Try")} copy={t("Preview the styles most worth considering while keeping your identity intact.")} /><ValueCard icon={<ArrowRight />} number="03" title={t("Take action")} copy={t("Know what to ask for, how to maintain it, and what is realistic now.")} /></div></div></div></section>
     <section className="bg-clay px-5 py-20 sm:px-8 lg:px-12 lg:py-24"><div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center"><div><p className="eyebrow mb-5">{t("BEYOND THE IMAGE")}</p><h2 className="font-display text-5xl leading-[.96] tracking-tight sm:text-6xl">{t("Made for the salon,")}<br />{t("not just the screen.")}</h2></div><div className="rounded-[1.8rem] bg-ivory p-6 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-8"><div className="flex items-center justify-between border-b border-ink/10 pb-5"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/35">{t("Real-world fit")}</p><p className="mt-2 font-display text-3xl">{t("Collarbone layers")}</p></div><span className="rounded-full bg-sage/20 px-3 py-2 text-xs font-bold text-deep-sage">{t("HIGH")}</span></div><p className="mt-5 leading-7 text-ink/60">{t("Your current length and density can support this shape. Ask for soft face-framing layers and avoid excessive thinning.")}</p><div className="mt-5 grid grid-cols-3 gap-3 text-sm"><div><p className="text-ink/40">{t("Perm")}</p><p className="mt-1 font-bold">{t("Optional")}</p></div><div><p className="text-ink/40">{t("Daily styling")}</p><p className="mt-1 font-bold">{t("5–10 min")}</p></div><div><p className="text-ink/40">{t("Maintenance")}</p><p className="mt-1 font-bold">{t("6–8 weeks")}</p></div></div></div></div></section>
     <section className="px-5 py-20 text-center sm:px-8 lg:py-24"><p className="eyebrow mb-5">{t("ONE SELFIE IS ENOUGH")}</p><h2 className="mx-auto max-w-4xl font-display text-5xl leading-[.95] tracking-tight sm:text-7xl">{t("See the cut before you commit.")}</h2><a className="button-primary mt-8" href="#top">{t("Start with my selfie")}{" "}<ArrowRight className="size-4" /></a></section>
+    {locale === "zh" && <ChineseHairstyleInfo />}
     <footer className="border-t border-ink/10 px-5 py-8 text-sm text-ink/50 sm:px-8 lg:px-12"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 sm:flex-row"><p>© {new Date().getFullYear()} {" "}{t("newself. Hair decisions, made clearer.")}</p><div className="flex gap-6"><Link href="/privacy">{t("Privacy")}</Link><Link href="/terms">{t("Terms")}</Link><a href="mailto:hello@newself.cc">{t("Contact")}</a></div></div></footer>
   </main>;
 }

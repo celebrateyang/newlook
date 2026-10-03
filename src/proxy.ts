@@ -4,6 +4,7 @@ import { isLocale, LOCALE_COOKIE, preferredLocale } from "@/lib/i18n/locale";
 
 export default clerkMiddleware((_auth, request) => {
   const { pathname } = request.nextUrl;
+  if (["/robots.txt", "/sitemap.xml", "/llms.txt"].includes(pathname)) return NextResponse.next();
   const segment = pathname.split("/")[1];
   const isApi = /^\/(api|trpc)(\/|$)/.test(pathname);
   const apiLocale = request.headers.get("x-newself-language");

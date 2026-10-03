@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { I18nProvider } from "@/components/i18n-provider";
 import { GoogleAnalytics } from "@/components/google-analytics";
 import { isLocale } from "@/lib/i18n/locale";
-import { translator } from "@/lib/i18n/translate";
+import { pageMetadata } from "@/lib/seo/site";
 import { DM_Mono, Manrope, Playfair_Display } from "next/font/google";
 import "../globals.css";
 
@@ -19,16 +19,8 @@ type Props = { children: React.ReactNode; params: Promise<{ locale: string }> };
 export async function generateMetadata({ params }: Pick<Props, "params">): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  const t = translator(locale);
   const pathname = (await headers()).get("x-newself-path") ?? `/${locale}/`;
-  const route = pathname.replace(/^\/(en|zh)(?=\/|$)/, "");
-  return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://newself.cc"),
-    title: { default: t("newself — AI Hairstyle Advisor"), template: "%s | newself" },
-    description: t("Discover hairstyles that suit your face and hair, try them on, and get a salon-ready guide."),
-    alternates: { canonical: pathname, languages: { en: `/en${route || "/"}`, "zh-CN": `/zh${route || "/"}`, "x-default": `/en${route || "/"}` } },
-    openGraph: { title: t("newself — AI Hairstyle Advisor"), description: t("See it before you cut it."), type: "website", url: pathname, locale: locale === "zh" ? "zh_CN" : "en_US", alternateLocale: locale === "zh" ? "en_US" : "zh_CN", siteName: "newself" },
-  };
+  return pageMetadata(locale, pathname);
 }
 
 export default async function RootLayout({ children, params }: Props) {

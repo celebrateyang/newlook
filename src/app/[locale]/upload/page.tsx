@@ -1,9 +1,11 @@
-import { getTranslations } from "@/lib/i18n/server";
+import { getLocale, getTranslations } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo/site";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { SelfieUploader } from "@/components/upload/selfie-uploader";
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (await getLocale() === "zh") return pageMetadata("zh", "/zh/upload");
   const t = await getTranslations();
   return { title: t("Upload a selfie"), description: t("Start your personal hairstyle analysis.") };
 }
