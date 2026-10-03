@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-03
 
+## Chinese hairstyle terminology — 2026-10-03
+
+- Updated Chinese copy by context: AI 换发型 / AI 发型设计 for feature and SEO names, 试发型 for actions, and 发型预览 / 换发型效果图 for results. Retained AI 发型顾问 as the product positioning.
+- Updated homepage metadata, Open Graph, JSON-LD, visible FAQs, llms.txt and upload/catalog/recruitment translations. Homepage SEO title: “AI 发型设计与换发型：上传照片试发型 | newself”. Recorded the terminology decision in the canonical spec; no keyword-volume or traffic claim is made.
+- Verification: `pnpm typecheck`, `pnpm lint` and the 10 existing SEO/localization tests passed. No deployment was performed.
+
 ## Chinese SEO and GEO foundation — 2026-10-03
 
 - Added distinct Chinese metadata for the six public page types, official-domain canonicals, reciprocal language alternates, Open Graph/X previews and snippet controls. Fixed duplicate brand suffixes when page metadata inherits the layout title template.

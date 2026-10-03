@@ -9,7 +9,7 @@ export function GET() {
     "# newself — AI 发型顾问",
     `> ${chineseOverview}`,
     "## 中文公开页面",
-    ...[["首页：AI 发型设计与在线试戴", "/zh"], ["关于 newself", "/zh/about"], ["免费体验与每日额度", "/zh/pricing"], ["中国大陆理发师入驻", "/zh/stylists"], ["隐私政策", "/zh/privacy"], ["服务条款", "/zh/terms"]].map(([label, path]) => `- [${label}](${absoluteUrl(path)})`),
+    ...[["首页：AI 发型设计与换发型", "/zh"], ["关于 newself", "/zh/about"], ["免费体验与每日额度", "/zh/pricing"], ["中国大陆理发师入驻", "/zh/stylists"], ["隐私政策", "/zh/privacy"], ["服务条款", "/zh/terms"]].map(([label, path]) => `- [${label}](${absoluteUrl(path)})`),
     "## 使用流程",
     ...chineseSteps.map(({ title, text }, index) => `${index + 1}. ${title}：${text}`),
     "## 常见问题",
