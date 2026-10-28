@@ -609,5 +609,9 @@
   "Private uploaded photo": "私密上传的照片",
   "Fictional catalog model before the AI edit": "AI 编辑前的虚构发型库模特",
   "Actual AI curtain-bangs preview on the fictional model": "使用虚构模特实际生成的八字刘海预览",
-  "Actual AI edit on a fictional catalog model. Not a customer or verified salon result.": "使用虚构发型库模特实际生成的 AI 效果图，不是顾客案例或经过验证的理发店效果。"
+  "Actual AI edit on a fictional catalog model. Not a customer or verified salon result.": "使用虚构发型库模特实际生成的 AI 效果图，不是顾客案例或经过验证的理发店效果。",
+  "Aim to preserve your face, expression, body, clothes and background": "以保留你的五官、表情、身体、服装和背景为目标",
+  "Compare with your selfie; AI can drift toward the reference person's face": "请与自拍对照，AI 仍可能偏向参考人物的面容",
+  "Working…": "正在处理…",
+  "Side photo": "侧面照片"
 }

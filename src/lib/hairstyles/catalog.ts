@@ -1,3 +1,6 @@
+// General discussion estimates shared by advice, cards and exported guides.
+export const GENERAL_STYLING_MINUTES = { Low: 5, Medium: 10, High: 20 } as const;
+
 export const STARTER_HAIRSTYLES = [
   {
     slug: "soft-layered-cut", name: "Soft Layered Cut", nameZh: "柔和层次长发", presentation: "feminine", category: "Medium to long",

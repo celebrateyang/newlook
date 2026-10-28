@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { assessFeasibility } from "../src/lib/hairstyles/feasibility";
-import { getAssessedSalonGuide } from "../src/lib/hairstyles/salon-guides";
+import { getAssessedSalonGuide, getSalonGuide } from "../src/lib/hairstyles/salon-guides";
 import { defaultPreferences, type VisibleHair } from "../shared/advisor";
 import { buildHairAnalysisPrompt } from "../src/lib/ai/prompts/hair-analysis";
 const hair: VisibleHair = { hairLength: "long", hairDensity: "low", texture: "straight", thickness: "fine", hairline: "average", crownVolume: "flat" };
@@ -30,4 +30,21 @@ test("old results get labelled general guides and reference transfer gets no fab
 test("analysis prompt receives explicit user preferences and prohibits pseudo-precision", () => {
   const prompt = buildHairAnalysisPrompt("en", { lengthChange: "keep", perm: "no", dailyMinutes: "5" });
   expect(prompt).toContain("length change=keep"); expect(prompt).toContain("perm=no"); expect(prompt).toContain("Do not output match percentages");
+});
+
+test("broad short-hair categories do not falsely require growth for a chin-length bob", () => {
+  const result = assessFeasibility("french-bob", { ...hair, hairLength: "short" }, { ...defaultPreferences, dailyMinutes: "30" }, "en")!;
+  expect(result.status).toBe("discuss");
+  expect(result.reasons.join(" ")).toContain("overlaps");
+  expect(result.reasons.join(" ")).not.toContain("need more length");
+});
+
+test("bangs require a front-length check and preview cards lead with styling constraints", () => {
+  const result = assessFeasibility("curtain-bangs", hair, { ...defaultPreferences, dailyMinutes: "5" }, "en")!;
+  expect(result.status).toBe("discuss");
+  expect(result.reasons.join(" ")).toContain("front sections");
+  expect(result.reasons[0]).toContain("styling budget");
+  expect(getSalonGuide("curtain-bangs", "en").dailyStylingMinutes).toBe(10);
+  expect(getSalonGuide("curtain-bangs", "zh").dailyStylingMinutes).toBe(10);
+  expect(buildHairAnalysisPrompt("en")).toContain("french-bob: French Bob — general maintenance=medium");
 });

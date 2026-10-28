@@ -1,4 +1,4 @@
-import type { StarterHairstyleSlug } from "./catalog";
+import { GENERAL_STYLING_MINUTES, getStarterHairstyle, type StarterHairstyleSlug } from "./catalog";
 import guidesZh from "./salon-guides-zh.json";
 import type { Locale } from "@/lib/i18n/locale";
 import { readAdvisorSnapshot, ADVISOR_RULES_VERSION } from "../../../shared/advisor";
@@ -100,7 +100,9 @@ function englishSalonGuide(slug: string) {
 }
 
 export function getSalonGuide(slug: string, locale: Locale = "en"): SalonGuide {
-  const guide = englishSalonGuide(slug);
+  const base = englishSalonGuide(slug);
+  const style = getStarterHairstyle(slug);
+  const guide = { ...base, dailyStylingMinutes: style ? GENERAL_STYLING_MINUTES[style.maintenance] : base.dailyStylingMinutes };
   if (locale === "en") return guide;
   const translated = (guidesZh as Record<string, typeof guidesZh.default>)[slug] ?? guidesZh.default;
   return { ...guide, ...translated };
