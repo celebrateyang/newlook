@@ -1,6 +1,24 @@
 # newself Current Status
 
-Last updated: 2026-10-03
+Last updated: 2026-10-28
+
+## Recommendation quality and media privacy — 2026-10-27
+
+- Added explicit length-change, perm and daily-styling preferences to personal analysis. Removed uncalibrated match percentages. Saved assessments are account-owned, bound to the exact original photo, and attached to generation records.
+- Added conservative photo/preference feasibility discussion rules, shared by result pages and English PDF/ZIP exports. Unknown/growth/maintenance constraints are explained without invented growth dates. Direct/unassessed results remain labelled general references; reference transfers do not receive a fabricated technical report.
+- Added same-view original comparisons and persisted owner quality feedback, with clear limits: no automatic face certification or guaranteed salon outcome. Improved multi-page PDF layout and confirmed its rendered pages.
+- Added owner photo thumbnails and deletion controls for photos/dependent results, individual hairstyles, all media and accounts. Access/sharing is removed transactionally; private R2 files are queued with an in-flight grace period and retries. Daily quota survives media deletion. Added expiry for unused tracked files, paginated adoption of legacy database-owned files and a verified Clerk deletion-webhook handler. See [release configuration and boundaries](recommendation-readiness.md).
+- Added English public workflow/FAQ/JSON-LD, aligned generation allowance and accurate identity copy in both languages, a fictional consultation demo, and three bilingual haircut discussion topics in the public sitemap. No customer testimonial or verified salon case was fabricated.
+- Local production build and targeted safety checks passed; final validation is recorded in the readiness document. Real R2 upload/read/delete returned the expected 404 after cleanup. One real OpenAI analysis and one image edit succeeded using an existing fictional catalog model. These isolated checks do not establish the full signed-in/hosted workflow.
+- Production R2 cleanup configuration and the Clerk user.deleted endpoint/signing secret were completed on 2026-10-28. Publication, hosted deletion/retention and the joined signed-in flow still require verification. Existing production Search Console results below refer to the earlier published version.
+
+## Search Console production audit — 2026-10-27
+
+- Confirmed the two redirect exclusions are expected HTTP-to-HTTPS and `/en/`-to-`/en` normalization; `/en` is already indexed. No redirect or authentication changes are needed.
+- The sole indexed-without-content URL is the Clerk API subdomain, which already serves `X-Robots-Tag: noindex, nofollow`. Started Search Console fix validation; the result is pending.
+- Resubmitted the existing 12-page bilingual sitemap. Submission was accepted; the sitemap report still says it could not be fetched. A separate real Google live URL test successfully fetched the sitemap. Do not conflate submission/live-fetch success with completed sitemap processing.
+- `/zh` passed Google's real live indexability test. After a transient Google reCAPTCHA connection error, reloading and retrying the indexing request succeeded; Google confirmed placement in its priority crawl queue. Eventual indexing remains unconfirmed.
+- Production HTTP checks confirmed readable bilingual homepage HTML, self-canonicals, index directives and crawl endpoints. See [audit details](seo-geo.md). Only documentation changed; no application deployment or local code tests were necessary.
 
 ## Chinese hairstyle terminology — 2026-10-03
 

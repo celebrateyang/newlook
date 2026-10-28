@@ -20,7 +20,7 @@ test("Chinese public pages have distinct metadata and matching language canonica
 
 test("private, shared, login and duplicate tool pages cannot be indexed", () => {
   for (const locale of ["zh", "en"] as const) {
-    for (const route of ["/results/private-id", "/looks", "/share/token", "/poll/token", "/sign-in", "/sign-in/sso-callback", "/upload"]) {
+    for (const route of ["/results/private-id", "/looks", "/share/token", "/poll/token", "/sign-in", "/sign-in/sso-callback", "/upload", "/settings/privacy"]) {
       const metadata = pageMetadata(locale, `/${locale}${route}`);
       expect(metadata.robots).toMatchObject({ index: false });
       expect(metadata.alternates?.languages).toBeUndefined();

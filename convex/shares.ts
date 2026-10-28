@@ -67,6 +67,7 @@ export const rate = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthenticated");
     if (!Number.isInteger(args.score) || args.score < 1 || args.score > 5) throw new Error("Choose a score from 1 to 5");
+    if (await ctx.db.query("deletedAccounts").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique()) throw new Error("Unauthenticated");
     const share = await ctx.db.query("resultShares").withIndex("by_token", q => q.eq("token", args.token)).unique();
     if (!share?.active) throw new Error("Share unavailable");
     const owner = await ctx.db.get(share.userId);
@@ -87,7 +88,7 @@ export const rate = mutation({
 export const rateAnonymous = mutation({
   args: { proof: voteProof },
   handler: async (ctx, { proof }) => {
-    await verifyVote(proof);
+    await verifyVote(proof, ctx);
     if (proof.kind !== "single" || proof.index !== 0) throw new ConvexError({ code: "INVALID_VOTE" });
     const share = await ctx.db.query("resultShares").withIndex("by_token", q => q.eq("token", proof.token)).unique();
     if (!share?.active) throw new ConvexError({ code: "SHARE_UNAVAILABLE" });
@@ -109,7 +110,7 @@ export const rateAnonymous = mutation({
 export const myAnonymousRating = query({
   args: { proof: voteProof },
   handler: async (ctx, { proof }) => {
-    await verifyVote(proof);
+    await verifyVote(proof, ctx);
     if (proof.kind !== "single") throw new ConvexError({ code: "INVALID_VOTE" });
     const share = await ctx.db.query("resultShares").withIndex("by_token", q => q.eq("token", proof.token)).unique();
     if (!share?.active) return null;

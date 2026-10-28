@@ -4,7 +4,7 @@ import { convertPhotoToJpeg } from "@/lib/downloads/image";
 import { createSalonGuidePdf } from "@/lib/downloads/pdf";
 import { createZip } from "@/lib/downloads/zip";
 import { getOwnedGeneration, safeFilename } from "@/lib/generations/server";
-import { getSalonGuide } from "@/lib/hairstyles/salon-guides";
+import { getAssessedSalonGuide } from "@/lib/hairstyles/salon-guides";
 import { r2Env } from "@/lib/env";
 import { createR2Client } from "@/lib/r2/client";
 
@@ -16,7 +16,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
   const owned = await getOwnedGeneration(generationId);
   if (owned.status === 401) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   if (owned.status === 404) return NextResponse.json({ error: "Result not found" }, { status: 404 });
-  const guide = getSalonGuide(owned.data.hairstyle.slug);
+  const guide = getAssessedSalonGuide(owned.data.hairstyle.slug, "en", owned.data.assessment);
   if (!guide) return NextResponse.json({ error: "Guide is unavailable" }, { status: 404 });
   const r2 = createR2Client();
   const bucket = r2Env().R2_BUCKET_NAME;

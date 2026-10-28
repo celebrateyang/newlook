@@ -2,7 +2,7 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from "next/server";
 import { getOwnedGeneration } from "@/lib/generations/server";
-import { getSalonGuide } from "@/lib/hairstyles/salon-guides";
+import { getAssessedSalonGuide } from "@/lib/hairstyles/salon-guides";
 import { r2Env } from "@/lib/env";
 import { createR2Client } from "@/lib/r2/client";
 import { getLocale } from "@/lib/i18n/server";
@@ -20,6 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
     const views = await Promise.all(owned.data.results.map(async (result) => ({
       id: result._id,
       view: result.view ?? "front",
+      sourceUrl: owned.data.sideSources.find(source => source.resultId === result._id) ? await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: owned.data.sideSources.find(source => source.resultId === result._id)!.r2Key }), { expiresIn: 900 }) : undefined,
       url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: result.r2Key }), { expiresIn: 3600 }),
     })));
     const reference = owned.data.referenceUpload ? {
@@ -30,10 +31,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ gen
       status: owned.data.generation.status,
       style: { slug: owned.data.hairstyle.slug, name: owned.data.hairstyle.nameEn },
       source: { width: owned.data.upload.width, height: owned.data.upload.height },
+      sourceUrl: await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: owned.data.upload.r2Key }), { expiresIn: 900 }),
       reference,
       views,
-      guide: getSalonGuide(owned.data.hairstyle.slug, await getLocale()),
-    });
+      guide: getAssessedSalonGuide(owned.data.hairstyle.slug, await getLocale(), owned.data.assessment),
+    }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Could not load generation", error);
     return NextResponse.json({ error: "Could not load this result" }, { status: 500 });

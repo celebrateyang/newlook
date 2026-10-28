@@ -18,10 +18,10 @@ const headingClass = "font-display text-2xl font-bold tracking-tight text-ink";
 const listClass = "list-disc space-y-2 pl-6 marker:text-coral";
 
 export default async function PrivacyPage() {
-  if (await getLocale() === "zh") return <InfoPage eyebrow="隐私政策" title="认真保护你的照片。"><ChineseLegalContent kind="privacy" /></InfoPage>;
+  if (await getLocale() === "zh") return <InfoPage eyebrow="隐私政策" title="认真保护你的照片。"><p><Link href="/settings/privacy" className="font-semibold underline underline-offset-4">管理照片隐私与删除</Link></p><ChineseLegalContent kind="privacy" /></InfoPage>;
   return (
     <InfoPage eyebrow="PRIVACY POLICY" title="Your photos deserve careful handling.">
-      <p className="text-sm font-semibold text-ink/45">Effective date: October 3, 2026</p>
+      <p className="text-sm font-semibold text-ink/45">Effective date: October 27, 2026</p>
       <p>
         This Privacy Policy explains how newself (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, shares, and protects information when you use <Link className="font-semibold text-ink underline underline-offset-4" href="/">newself.cc</Link> and its AI hairstyle advisory features.
       </p>
@@ -100,7 +100,7 @@ export default async function PrivacyPage() {
       <section className="space-y-3">
         <h2 className={headingClass}>7. Retention and deletion</h2>
         <ul className={listClass}>
-          <li>Original selfies and reference photos are normally deleted within 7 days unless you actively save a related result or continued storage is needed to provide a feature you requested.</li>
+          <li>Unused uploads and unfinished image files are scheduled for cleanup after 7 days. Photos needed by a saved result remain while that result needs them or until you delete them.</li>
           <li>Generated results you save remain available while your account is active or until you delete them or request deletion.</li>
           <li>Failed or abandoned temporary generation files are deleted as soon as reasonably practicable.</li>
           <li>When you delete your account or submit a verified deletion request, we delete or de-identify associated account records, photos, and generated results from active systems within 30 days.</li>
@@ -116,7 +116,7 @@ export default async function PrivacyPage() {
           Depending on where you live, you may have rights to access, correct, delete, restrict, object to, or receive a copy of your personal information, and to withdraw consent where processing relies on consent. You may update certain account information through the account interface.
         </p>
         <p>
-          To request complete account and service-data deletion, email <a className="font-semibold text-ink underline underline-offset-4" href="mailto:hello@newself.cc">hello@newself.cc</a> from the address associated with your account. We may verify your identity before completing a request.
+          Use <Link className="font-semibold text-ink underline underline-offset-4" href="/settings/privacy">Photo privacy and deletion</Link> to delete photos, dependent results, all media, or your account and application data. Affected app access and sharing are revoked first; stored files enter a retriable cleanup queue, with a short grace period for uploads already in flight. Previously issued signed links may continue until expiry or file cleanup. Account deletion removes the sign-in account; if that step fails, we show a pending status and you can retry. A minimal deletion marker is retained to prevent stale credentials from recreating data. You can also email <a className="font-semibold text-ink underline underline-offset-4" href="mailto:hello@newself.cc">hello@newself.cc</a> from your account email for help or a verified deletion request.
         </p>
       </section>
 

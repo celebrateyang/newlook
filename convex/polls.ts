@@ -67,7 +67,7 @@ export const publicPoll = query({
 export const rate = mutation({
   args: { proof: voteProof },
   handler: async (ctx, { proof }) => {
-    await verifyVote(proof);
+    await verifyVote(proof, ctx);
     if (proof.kind !== "poll") throw new ConvexError({ code: "INVALID_VOTE" });
     const poll = await ctx.db.query("hairstylePolls").withIndex("by_token", q => q.eq("token", proof.token)).unique();
     if (!poll?.active || proof.index < 0 || proof.index >= poll.resultIds.length) throw new ConvexError({ code: "SHARE_UNAVAILABLE" });
@@ -92,7 +92,7 @@ export const rate = mutation({
 export const myRatings = query({
   args: { proof: voteProof },
   handler: async (ctx, { proof }) => {
-    await verifyVote(proof);
+    await verifyVote(proof, ctx);
     if (proof.kind !== "poll") throw new ConvexError({ code: "INVALID_VOTE" });
     const poll = await ctx.db.query("hairstylePolls").withIndex("by_token", q => q.eq("token", proof.token)).unique();
     if (!poll?.active) return [];

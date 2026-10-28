@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
 import { locales, type Locale } from "@/lib/i18n/locale";
 import { translator } from "@/lib/i18n/translate";
+import { HAIRSTYLE_TOPICS, hairstyleTopic } from "@/lib/hairstyles/topics";
 
 // Canonicals always identify the official site, including in local/preview builds.
 export const SITE_URL = "https://newself.cc";
-export const PUBLIC_PATHS = ["", "/about", "/pricing", "/stylists", "/privacy", "/terms"] as const;
+export const PUBLIC_PATHS = ["", "/about", "/pricing", "/stylists", "/privacy", "/terms", ...HAIRSTYLE_TOPICS.map(topic => `/hairstyles/${topic.slug}`)] as const;
+
+const englishPages: Record<string, { title: string; description: string }> = {
+  "": { title: "AI Hairstyle Advisor & Virtual Hair Try-On", description: "Explore haircuts on your photo, get recommendations informed by your preferences, and take a discussion guide to your stylist. Free early access: up to 6 generation attempts daily." },
+  "/about": { title: "About newself: From Hair Inspiration to Salon Discussion", description: "How newself combines photo-based hair advice, visual try-on and practical discussion guides, with clear limits on what an AI preview can establish." },
+  "/pricing": { title: "Free Early Access & Daily Hairstyle Quota", description: "Up to 6 hairstyle generation attempts per signed-in account daily. Failed attempts count. No checkout or membership plans during early access." },
+  "/stylists": { title: "Join newself: Mainland China Stylist Recruitment", description: "Submit a private stylist application. Recruitment only; public profiles, matching, appointments and orders are not available yet." },
+  "/privacy": { title: "Privacy: Photos, Results & Deletion", description: "How newself handles photos, AI processing, saved results, optional sharing and data deletion." },
+  "/terms": { title: "Terms of Service: AI Hairstyle Advice", description: "Usage rules, image permissions, AI preview limitations and responsibilities when using newself." },
+};
 
 const chinesePages: Record<string, { title: string; description: string }> = {
   "": { title: "AI 发型设计与换发型：上传照片试发型", description: "newself AI 发型顾问：上传自拍，分析脸型与当前头发条件，获取发型推荐、换发型效果图和理发师沟通指南。支持参考图换发型，早期体验每个登录账号每天最多 6 次生成，剪发前先看效果。" },
@@ -29,7 +39,8 @@ export function pageMetadata(locale: Locale, pathname: string): Metadata {
   const canonical = absoluteUrl(`/${locale}${route}`);
   const isPublic = PUBLIC_PATHS.some(path => path === route);
   const t = translator(locale);
-  const copy = locale === "zh" ? chinesePages[route] : undefined;
+  const topic = route.startsWith("/hairstyles/") ? hairstyleTopic(route.slice("/hairstyles/".length)) : undefined;
+  const copy = topic?.[locale] ?? (locale === "zh" ? chinesePages[route] : englishPages[route]);
   const title = copy?.title ?? t("newself — AI Hairstyle Advisor");
   const description = copy?.description ?? t("Discover hairstyles that suit your face and hair, try them on, and get a salon-ready guide.");
   const socialTitle = copy ? `${title} | newself` : title;

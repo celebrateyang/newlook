@@ -11,6 +11,9 @@ import type { HairAnalysis } from "@/lib/ai/hair-analysis";
 import { STARTER_HAIRSTYLES, type StarterHairstyleSlug } from "@/lib/hairstyles/catalog";
 import type { HomeHistory } from "@/lib/home/history";
 import { QuotaNotice } from "@/components/results/quota-notice";
+import { AdvisorPreferenceFields } from "@/components/advisor-preferences";
+import { defaultPreferences, type AdvisorPreferences } from "../../../shared/advisor";
+import { assessFeasibility } from "@/lib/hairstyles/feasibility";
 
 const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxBytes = 10 * 1024 * 1024;
@@ -18,28 +21,26 @@ const analysisCacheLifetimeMs = 12 * 60 * 60 * 1000;
 type Stage = "idle" | "authorizing" | "uploading" | "saving" | "analyzing" | "complete";
 type DiscoveryMode = "choose" | "recommend" | "browse" | "reference";
 
-function readCachedAnalysis(uploadKey?: string, locale = "en") {
+function readCachedAnalysis(uploadKey: string | undefined, locale: string, preferences: AdvisorPreferences) {
   if (!uploadKey) return undefined;
   try {
-    const cacheKey = `newself:analysis:${locale}:${uploadKey}`;
-    const legacyCacheKey = `newlook:analysis:${locale}:${uploadKey}`;
-    const raw = sessionStorage.getItem(cacheKey) ?? sessionStorage.getItem(legacyCacheKey);
+    const cacheKey = `newself:analysis:v3:${locale}:${uploadKey}:${JSON.stringify(preferences)}`;
+    const raw = sessionStorage.getItem(cacheKey);
     if (!raw) return undefined;
-    const cached = JSON.parse(raw) as { expiresAt?: number; analysis?: HairAnalysis };
-    if (!cached.expiresAt || cached.expiresAt <= Date.now() || !cached.analysis?.recommendations?.length) {
+    const cached = JSON.parse(raw) as { expiresAt?: number; analysis?: HairAnalysis; consultationId?: string };
+    if (!cached.expiresAt || cached.expiresAt <= Date.now() || !cached.analysis?.recommendations?.length || !cached.consultationId) {
       sessionStorage.removeItem(cacheKey);
-      sessionStorage.removeItem(legacyCacheKey);
       return undefined;
     }
-    return cached.analysis;
+    return { analysis: cached.analysis, consultationId: cached.consultationId };
   } catch {
     return undefined;
   }
 }
 
-function cacheAnalysis(uploadKey: string, analysis: HairAnalysis, locale: string) {
+function cacheAnalysis(uploadKey: string, analysis: HairAnalysis, consultationId: string, locale: string, preferences: AdvisorPreferences) {
   try {
-    sessionStorage.setItem(`newself:analysis:${locale}:${uploadKey}`, JSON.stringify({ expiresAt: Date.now() + analysisCacheLifetimeMs, analysis }));
+    sessionStorage.setItem(`newself:analysis:v3:${locale}:${uploadKey}:${JSON.stringify(preferences)}`, JSON.stringify({ expiresAt: Date.now() + analysisCacheLifetimeMs, analysis, consultationId }));
   } catch {
     // Recommendation rendering should still work when browser storage is unavailable.
   }
@@ -69,6 +70,8 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   const [error, setError] = useState<string>();
   const [stage, setStage] = useState<Stage>("idle");
   const [analysis, setAnalysis] = useState<HairAnalysis>();
+  const [preferences, setPreferences] = useState<AdvisorPreferences>(defaultPreferences);
+  const [consultationId, setConsultationId] = useState<string>();
   const [mode, setMode] = useState<DiscoveryMode>("choose");
   const [uploadedKey, setUploadedKey] = useState<string | undefined>(initialHistory?.sourceKey);
   const [sourceMimeType, setSourceMimeType] = useState<(typeof acceptedTypes)[number] | undefined>(initialHistory?.sourceMimeType);
@@ -103,6 +106,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
     return () => window.clearTimeout(timer);
   }, [file, mode, preview]);
   function choose(next?: File) {
+    setConsultationId(undefined);
     setError(undefined); setAnalysis(undefined); setMode("choose"); setUploadedKey(undefined); setSourceMimeType(undefined); setGeneratedResult(undefined); setStage("idle");
     if (!next) return;
     if (!acceptedTypes.includes(next.type)) return setError(t("Choose a JPG, PNG or WebP image."));
@@ -122,6 +126,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   }
 
   function reset() {
+    setConsultationId(undefined);
     if (preview) URL.revokeObjectURL(preview);
     selectedFileRef.current = undefined;
     if (referencePreview?.startsWith("blob:")) URL.revokeObjectURL(referencePreview);
@@ -133,6 +138,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   }
 
   function restoreSavedLook() {
+    setConsultationId(undefined);
     if (!initialHistory) return;
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     selectedFileRef.current = undefined;
@@ -193,10 +199,10 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
 
   async function recommend() {
     if (!preview || busy) return;
-    const cached = analysis ?? readCachedAnalysis(uploadedKey, locale);
+    const cached = analysis && consultationId ? { analysis, consultationId } : readCachedAnalysis(uploadedKey, locale, preferences);
     setError(undefined); setMode("recommend");
     if (cached) {
-      setAnalysis(cached); setStage("complete");
+      setAnalysis(cached.analysis); setConsultationId(cached.consultationId); setStage("complete");
       requestAnimationFrame(() => document.getElementById("recommendations")?.scrollIntoView({ behavior: "smooth", block: "start" }));
       return;
     }
@@ -206,10 +212,11 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
       const source = await ensureUploaded();
       if (!source) return;
       setStage("analyzing");
-      const analyzed = await fetch("/api/analysis", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(source) });
+      const analyzed = await fetch("/api/analysis", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...source, preferences }) });
       if (!analyzed.ok) throw new Error(await responseError(analyzed, t("Analysis failed")));
-      const result = await analyzed.json() as { analysis: HairAnalysis };
-      cacheAnalysis(source.key, result.analysis, locale);
+      const result = await analyzed.json() as { analysis: HairAnalysis; consultationId: string };
+      cacheAnalysis(source.key, result.analysis, result.consultationId, locale, preferences);
+      setConsultationId(result.consultationId);
       setAnalysis(result.analysis); setStage("complete");
       requestAnimationFrame(() => document.getElementById("recommendations")?.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (cause) {
@@ -286,7 +293,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
     setError(undefined); setGeneratingStyle(styleSlug);
     requestAnimationFrame(() => document.getElementById("try-on-preview")?.scrollIntoView({ behavior: "smooth", block: "center" }));
     try {
-      const response = await fetch("/api/generations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uploadKey: uploadedKey, styleSlug }) });
+      const response = await fetch("/api/generations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uploadKey: uploadedKey, styleSlug, consultationId }) });
       if (!response.ok) throw new Error(await responseError(response, t("Generation failed")));
       const result = await response.json() as { generationId: string; styleName: string; results: Array<{ url: string }> };
       const first = result.results[0];
@@ -310,6 +317,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
   const scrollToChoices = () => document.getElementById("discovery-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return <section aria-label={t("Hairstyle advisor")} className="advisor-workspace">
+    <p className="mb-3 text-center text-xs leading-6 text-ink/60">{t("Sign in to upload and generate. Photos are processed by OpenAI and stored privately.")} <button type="button" className="font-semibold underline" onClick={() => router.push("/settings/privacy")}>{t("Photo privacy and deletion")}</button></p>
     <QuotaNotice refreshKey={`${generatingStyle ?? ""}:${referenceBusy}:${uploadedKey ?? ""}`} />
     <input ref={inputRef} aria-label={t("Upload your selfie")} type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => choose(event.target.files?.[0])} />
     <input ref={referenceInputRef} aria-label={t("Upload a hairstyle reference photo")} type="file" accept={acceptedTypes.join(",")} className="sr-only" onChange={(event) => chooseReference(event.target.files?.[0])} />
@@ -318,7 +326,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
         <div>
           <p className="text-xs font-bold uppercase tracking-[.15em] text-coral">{generationInProgress ? t("Creating your preview") : returningUser ? t("Welcome back") : t("Your current look")}</p>
           <h2 className="mt-2 font-display text-3xl leading-tight tracking-tight sm:text-4xl">{generationInProgress ? t("Generating {style}", { style: t(pendingStyleName) }) : generatedResult ? t(generatedResult.styleName) : t("Continue with your saved selfie")}</h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generationInProgress ? t("newself is changing only the hairstyle while preserving your face, expression, clothes and background.") : generatedResult ? t("Your latest preview is ready. Keep exploring with the same selfie or open the full result.") : t("Your selfie is ready. Choose how you want to find your next hairstyle.")}</p>
+          <p className="mt-3 max-w-md text-sm leading-6 text-ink/55">{generationInProgress ? t("The AI aims to change your hairstyle while retaining facial details. Check the finished preview against your original.") : generatedResult ? t("Your latest preview is ready. Keep exploring with the same selfie or open the full result.") : t("Your selfie is ready. Choose how you want to find your next hairstyle.")}</p>
           <div className="mt-5 flex flex-wrap gap-2">
             {generationInProgress ? <span role="status" aria-live="polite" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-5 text-sm font-bold text-white"><LoaderCircle className="size-4 animate-spin" /> {" "}{t("Generating preview…")}</span> : <button type="button" onClick={scrollToChoices} className="button-primary">{t("Continue exploring")}{" "}<ArrowRight className="size-4" /></button>}
             {generatedResult && !generationInProgress && <button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="button-secondary">{t("View full result")}</button>}
@@ -341,7 +349,7 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
               <span className="grid size-12 place-items-center rounded-full bg-coral text-white shadow-[0_12px_30px_rgba(232,102,80,.3)]"><LoaderCircle className="size-6 animate-spin" /></span>
               <span className="mt-3 rounded-full bg-white/80 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.16em] text-coral shadow-sm">{t("AI is working")}</span>
               <p className="mt-2 font-display text-lg leading-tight text-ink sm:text-2xl">{t("Creating")}{" "}{t(pendingStyleName)}</p>
-              <p className="mt-1 hidden max-w-xs text-xs leading-5 text-ink/50 sm:block">{t("Preserving your identity and applying only the hairstyle.")}</p>
+              <p className="mt-1 hidden max-w-xs text-xs leading-5 text-ink/50 sm:block">{t("Aiming to retain facial details while changing the hairstyle.")}</p>
               <div className="mt-3 h-1.5 w-3/4 max-w-56 overflow-hidden rounded-full bg-white/80"><span className="generation-progress block h-full w-1/2 rounded-full bg-coral" /></div>
               <p className="mt-2 text-[10px] font-semibold text-ink/40">{t("Usually about one minute")}</p>
             </div>
@@ -375,18 +383,20 @@ export function SelfieUploader({ initialHistory }: { initialHistory?: HomeHistor
 
       <div className="rounded-[1.6rem] bg-white p-4 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-5">
         <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-ink/40">{t(generatedResult ? "Your try-on" : "Example result")}</p><h2 className="mt-1 text-lg font-bold">{t(generatedResult?.styleName ?? "See the change before the cut")}</h2></div>{generatedResult && <div className="flex items-center gap-2"><span className="hidden rounded-full bg-sage/15 px-3 py-1.5 text-xs font-bold text-deep-sage sm:block">{t("AI preview")}</span><button type="button" onClick={() => router.push(`/results/${generatedResult.generationId}`)} className="inline-flex items-center gap-1.5 rounded-full bg-coral px-3 py-2 text-xs font-bold text-white hover:bg-ink">{t("Open result")} <ArrowRight className="size-3.5" /></button></div>}</div>
-        <div className="relative overflow-hidden rounded-[1.2rem] bg-clay"><Image src="/example-before-after.png" alt="Example showing the same person before and after a realistic layered haircut" width={1536} height={1024} priority className="aspect-[3/2] w-full object-cover" /><div className="pointer-events-none absolute inset-0 grid grid-cols-2"><div className="relative"><ImageLabel>{t("Before")}</ImageLabel></div><div className="relative"><ImageLabel>{t("After")}</ImageLabel></div></div></div>
-        <div className="mt-4 grid gap-3 border-t border-ink/10 pt-4 sm:grid-cols-3"><ProofPoint title="Personal matches" copy="Based on your face and hair" /><ProofPoint title={t("Identity preserved")} copy={t("Only the hairstyle changes")} /><ProofPoint title="Salon realistic" copy="Built for achievable cuts" /></div>
+        <div className="grid grid-cols-2 gap-1 overflow-hidden rounded-[1.2rem] bg-clay"><figure className="relative"><Image src="/images/hairstyles/catalog/french-bob-v1.webp" alt={t("Fictional catalog model before the AI edit")} width={768} height={768} priority className="aspect-square w-full object-contain" /><ImageLabel>{t("Before")}</ImageLabel></figure><figure className="relative"><Image src="/images/examples/curtain-bangs-api-example-v1.webp" alt={t("Actual AI curtain-bangs preview on the fictional model")} width={1254} height={1254} priority className="aspect-square w-full object-contain" /><ImageLabel>{t("After")}</ImageLabel></figure></div>
+        <p className="mt-3 text-xs leading-5 text-ink/50">{t("Actual AI edit on a fictional catalog model. Not a customer or verified salon result.")}</p>
+        <div className="mt-4 grid gap-3 border-t border-ink/10 pt-4 sm:grid-cols-3"><ProofPoint title={t("Personal matches")} copy={t("Based on your face and hair")} /><ProofPoint title={t("Designed to retain your features")} copy={t("Compare with your original")} /><ProofPoint title={t("Salon discussion")} copy={t("Confirm what is achievable")} /></div>
       </div>
     </div>}
 
     {error && <p role="alert" className="mt-4 rounded-xl bg-butter/55 px-4 py-3 text-sm leading-6 text-ink/70">{t(error)}</p>}
+    {preview && <AdvisorPreferenceFields disabled={workspaceBusy} value={preferences} onChange={value => { setPreferences(value); setAnalysis(undefined); setConsultationId(undefined); if (mode === "recommend") setMode("choose"); }} />}
     {preview && <DiscoveryChoices mode={mode} busy={busy || referenceBusy || Boolean(generatingStyle)} guideNextStep={Boolean(file)} onRecommend={recommend} onBrowse={browse} onReference={reference} />}
     {mode === "recommend" && !analysis && busy && <RecommendationLoading status={status ?? t("Finding your best matches…")} />}
-    {mode === "recommend" && analysis && <AnalysisResult analysis={analysis} generatingStyle={generatingStyle} selectedStyle={generatedResult?.styleSlug} onGenerate={generate} />}
+    {mode === "recommend" && analysis && <AnalysisResult analysis={analysis} preferences={preferences} generatingStyle={generatingStyle} selectedStyle={generatedResult?.styleSlug} onGenerate={generate} />}
     {mode === "browse" && uploadedKey && !busy && <BrowseCatalog generatingStyle={generatingStyle} selectedStyle={generatedResult?.styleSlug} onGenerate={generate} />}
     {mode === "reference" && uploadedKey && !busy && <ReferenceTransferPanel preview={referencePreview} copyHairColor={copyHairColor} busy={referenceBusy} status={referenceStatus} onChoose={() => referenceInputRef.current?.click()} onDrop={chooseReference} onCopyHairColor={setCopyHairColor} onGenerate={generateReference} />}
-    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-ink/45"><span className="inline-flex items-center gap-1.5"><LockKeyhole className="size-3.5" /> {" "}{t("Private by default")}</span><span className="inline-flex items-center gap-1.5"><Camera className="size-3.5" /> {t("One selfie is enough")}</span><span>{t("One free preview")}</span></div>
+    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-ink/45"><span className="inline-flex items-center gap-1.5"><LockKeyhole className="size-3.5" /> {" "}{t("Private by default")}</span><span className="inline-flex items-center gap-1.5"><Camera className="size-3.5" /> {t("One selfie is enough")}</span><span>{t("6 free generations daily")}</span></div>
   </section>;
 }
 
@@ -473,8 +483,8 @@ function RecommendationLoading({ status }: { status: string }) {
   </section>;
 }
 
-function AnalysisResult({ analysis, generatingStyle, selectedStyle, onGenerate }: { analysis: HairAnalysis; generatingStyle?: StarterHairstyleSlug; selectedStyle?: StarterHairstyleSlug; onGenerate(style: StarterHairstyleSlug): void }) {
-  const { t } = useI18n();
+function AnalysisResult({ analysis, preferences, generatingStyle, selectedStyle, onGenerate }: { analysis: HairAnalysis; preferences: AdvisorPreferences; generatingStyle?: StarterHairstyleSlug; selectedStyle?: StarterHairstyleSlug; onGenerate(style: StarterHairstyleSlug): void }) {
+  const { t, locale } = useI18n();
   const metrics = [[t("Face shape"), analysis.faceShape], [t("Hair length"), analysis.hairLength], [t("Density"), analysis.hairDensity], [t("Texture"), analysis.texture], [t("Thickness"), analysis.thickness], [t("Crown volume"), analysis.crownVolume]];
   return <div className="mt-6 scroll-mt-4 rounded-[1.6rem] bg-white p-5 shadow-[0_24px_70px_rgba(53,43,35,.1)] sm:p-7" id="recommendations">
     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[.15em] text-coral">{t("Your results")}</p><h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">{t("Hairstyles worth trying first")}</h2></div><div className="max-w-md"><p className="text-sm leading-6 text-ink/50">{t("We considered your visible face proportions and current hair—not just what is trending.")}</p><a href="#discovery-heading" className="mt-2 inline-flex text-xs font-bold text-coral hover:text-ink">{t("Change method ↑")}</a></div></div>
@@ -485,10 +495,12 @@ function AnalysisResult({ analysis, generatingStyle, selectedStyle, onGenerate }
       const styleSlug = item.styleSlug ?? catalogStyle?.slug;
       const isGenerating = Boolean(styleSlug && generatingStyle === styleSlug);
       const isSelected = Boolean(styleSlug && selectedStyle === styleSlug);
+      const feasibility = styleSlug ? assessFeasibility(styleSlug, analysis, preferences, locale) : undefined;
       return <button type="button" disabled={Boolean(generatingStyle) || !styleSlug} onClick={() => { if (styleSlug) onGenerate(styleSlug); }} className="group flex overflow-hidden rounded-2xl border border-transparent bg-clay/45 text-left transition hover:-translate-y-0.5 hover:border-coral/55 hover:bg-coral/[.06] hover:shadow-[0_16px_40px_rgba(224,102,78,.12)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral disabled:cursor-wait disabled:hover:translate-y-0" key={styleSlug ?? item.name} aria-label={t("Generate a {style} preview. Uses one preview and usually takes about one minute.", { style: t(catalogStyle?.name ?? item.name) })}>
         <div className="flex w-full flex-col">{catalogStyle && <div className="relative aspect-[4/3] overflow-hidden bg-clay"><Image src={catalogStyle.previewImage} alt={t("AI catalog preview: {style}", { style: t(catalogStyle.name) })} fill sizes="(min-width: 1024px) 30vw, 90vw" className="object-cover object-[center_32%] transition duration-500 group-hover:scale-[1.025]" /><span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-ink/60 shadow-sm backdrop-blur">{t("AI preview")}</span></div>}
-        <div className="flex flex-1 flex-col p-5"><div className="flex w-full items-center justify-between gap-3"><span className="font-mono text-xs text-ink/35">0{index + 1}</span><span className="rounded-full bg-sage/15 px-2.5 py-1 text-xs font-bold text-deep-sage">{item.matchScore}{t("% match")}</span></div>
+        <div className="flex flex-1 flex-col p-5"><div className="flex w-full items-center justify-between gap-3"><span className="font-mono text-xs text-ink/35">0{index + 1}</span><span className="rounded-full bg-sage/15 px-2.5 py-1 text-xs font-bold text-deep-sage">{t("Worth discussing")}</span></div>
         <h3 className="mt-5 font-display text-2xl">{t(catalogStyle?.name ?? item.name)}</h3><p className="mt-2 text-sm leading-6 text-ink/55">{item.reason}</p>
+        {feasibility && <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs leading-5 text-ink/70"><p className="font-bold">{feasibility.title}</p><p className="mt-1">{feasibility.reasons[0]}</p></div>}
         <div className="mt-auto flex w-full items-end justify-between gap-3 pt-5"><span><span className="block text-[10px] font-bold uppercase tracking-[.14em] text-ink/35">{t(item.maintenance)} {" "}{t("maintenance")}</span><span className="mt-1 block text-[9px] text-ink/35">{t("1 preview · ~1 min")}</span></span><span className="inline-flex items-center gap-1.5 text-xs font-bold text-coral">{isGenerating ? <><LoaderCircle className="size-3.5 animate-spin" /> {" "}{t("Generating")}</> : isSelected ? <><CheckCircle2 className="size-3.5" /> {" "}{t("Preview shown")}</> : <>{t("Try this style")}{" "}<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" /></>}</span></div></div></div>
       </button>;
     })}</div>

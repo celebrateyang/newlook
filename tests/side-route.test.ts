@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { ConvexError } from "convex/values";
+import { getFunctionName } from "convex/server";
 
 const mocks = vi.hoisted(() => ({
   owned: vi.fn(), mutation: vi.fn(), setAuth: vi.fn(), token: vi.fn(),
@@ -16,7 +17,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.owned.mockResolvedValue({ status: 200, session: { userId: "owner", getToken: mocks.token }, convex: { mutation: mocks.mutation, setAuth: mocks.setAuth }, data: { hairstyle: { slug: "cornrows" }, generation: { _id: "generation" } } });
   mocks.token.mockResolvedValue("fake-refreshed-token");
-  mocks.mutation.mockResolvedValueOnce(undefined).mockResolvedValueOnce("side-result");
+  mocks.mutation.mockImplementation(async ref => getFunctionName(ref) === "generations:appendSideResult" ? "side-result" : undefined);
   mocks.send.mockResolvedValueOnce({ ContentType: "image/jpeg", Body: { transformToByteArray: async () => new Uint8Array([1]) } }).mockResolvedValueOnce({});
   mocks.generate.mockResolvedValue([{ bytes: new Uint8Array([2]), mimeType: "image/webp", providerRequestId: "provider-test" }]);
   mocks.sign.mockResolvedValue("https://example.com/side.webp");
@@ -32,7 +33,7 @@ test("cornrows side generation uploads and persists output before returning a us
   expect(await response.json()).toMatchObject({ id: "side-result", view: "side", url: "https://example.com/side.webp" });
   expect(mocks.generate.mock.calls[0][0].prompt).toContain("cornrows");
   expect(mocks.generate.mock.calls[0][0].prompt).toContain("side-view camera angle");
-  expect(mocks.mutation.mock.calls[1][1]).toMatchObject({ generationId: "generation", uploadKey: "uploads/user_owner/side_photo.jpg", providerRequestId: "provider-test" });
+  expect(mocks.mutation.mock.calls.find(([ref]) => getFunctionName(ref) === "generations:appendSideResult")?.[1]).toMatchObject({ generationId: "generation", uploadKey: "uploads/user_owner/side_photo.jpg", providerRequestId: "provider-test" });
   expect(mocks.setAuth).toHaveBeenCalledWith("fake-refreshed-token");
 });
 
@@ -52,7 +53,7 @@ test.each(["generate", "save"] as const)("%s failures return a safe stage code i
   const log = vi.spyOn(console, "error").mockImplementation(() => {});
   try {
     if (stage === "generate") mocks.generate.mockRejectedValue(new Error("private provider detail"));
-    else mocks.mutation.mockReset().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error("private database detail"));
+    else mocks.mutation.mockReset().mockImplementation(async ref => { if (getFunctionName(ref) === "generations:appendSideResult") throw new Error("private database detail"); });
     const response = await request();
     const body = await response.json();
     expect(response.status).toBe(500);

@@ -1,6 +1,8 @@
 import type { StarterHairstyleSlug } from "./catalog";
 import guidesZh from "./salon-guides-zh.json";
 import type { Locale } from "@/lib/i18n/locale";
+import { readAdvisorSnapshot, ADVISOR_RULES_VERSION } from "../../../shared/advisor";
+import { assessFeasibility, type Feasibility } from "./feasibility";
 
 export interface SalonGuide {
   overview: string;
@@ -8,6 +10,8 @@ export interface SalonGuide {
   instructions: Array<{ label: string; detail: string }>;
   dailyStylingMinutes: number;
   maintenanceWeeks: number;
+  personalized?: boolean;
+  assessment?: Feasibility;
 }
 
 const guides: Partial<Record<StarterHairstyleSlug, SalonGuide>> = {
@@ -100,4 +104,22 @@ export function getSalonGuide(slug: string, locale: Locale = "en"): SalonGuide {
   if (locale === "en") return guide;
   const translated = (guidesZh as Record<string, typeof guidesZh.default>)[slug] ?? guidesZh.default;
   return { ...guide, ...translated };
+}
+
+export function getAssessedSalonGuide(slug: string, locale: Locale = "en", saved?: { analysisJson: string; preferencesJson: string; rulesVersion?: string } | null): SalonGuide | undefined {
+  if (slug === "reference-transfer") return undefined;
+  const base = getSalonGuide(slug, locale);
+  const snapshot = (saved?.rulesVersion ?? "photo-discussion-v1") === ADVISOR_RULES_VERSION ? readAdvisorSnapshot(saved?.analysisJson, saved?.preferencesJson) : undefined;
+  const assessment = snapshot ? assessFeasibility(slug, snapshot.analysis, snapshot.preferences, locale) : undefined;
+  if (!assessment || !snapshot) return { ...base, personalized: false };
+  const zh = locale === "zh";
+  return {
+    ...base, personalized: true, assessment,
+    feasibility: `${assessment.title}. ${assessment.reasons.join(" ")} ${assessment.limitations}`,
+    instructions: [
+      { label: zh ? "你的偏好" : "Your preferences", detail: zh ? `长度调整：${snapshot.preferences.lengthChange === "keep" ? "保留整体长度" : snapshot.preferences.lengthChange === "moderate" ? "小幅调整" : "接受任意长度"}；烫发：${snapshot.preferences.perm === "no" ? "不接受" : snapshot.preferences.perm === "open" ? "可以考虑" : "先讨论"}；每天打理不超过 ${snapshot.preferences.dailyMinutes} 分钟。` : `Length change: ${snapshot.preferences.lengthChange}; perm: ${snapshot.preferences.perm}; daily styling budget: up to ${snapshot.preferences.dailyMinutes} minutes.` },
+      ...assessment.nextSteps.map(detail => ({ label: zh ? "现场确认" : "Confirm in the salon", detail })),
+      ...base.instructions,
+    ],
+  };
 }

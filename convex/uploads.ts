@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { ownsMedia } from "../shared/media";
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -18,10 +19,13 @@ export const recordCompleted = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
+    if (await ctx.db.query("deletedAccounts").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique()) throw new Error("Account deletion requested");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(args.mimeType) || !Number.isInteger(args.size) || args.size < 1 || args.size > 10 * 1024 * 1024) throw new Error("Invalid upload metadata");
+    if (await ctx.db.query("mediaDeletions").withIndex("by_key", q => q.eq("r2Key", args.r2Key)).unique()) throw new Error("Photo deletion requested");
     const expectedFolder = args.type === "reference" ? "references" : "uploads";
     const expectedPrefix = args.type;
     const ownedPrefix = `${expectedFolder}/user_${identity.subject}/${expectedPrefix}_`;
-    if (!args.r2Key.startsWith(ownedPrefix)) throw new Error("Upload ownership check failed");
+    if (!args.r2Key.startsWith(ownedPrefix) || !ownsMedia(identity.subject, args.r2Key)) throw new Error("Upload ownership check failed");
 
     const now = Date.now();
     const user = await ctx.db.query("users").withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)).unique();

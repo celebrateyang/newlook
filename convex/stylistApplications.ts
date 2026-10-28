@@ -18,6 +18,7 @@ export const submit = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("UNAUTHENTICATED");
+    if (await ctx.db.query("deletedAccounts").withIndex("by_clerk_id", q => q.eq("clerkId", identity.subject)).unique()) throw new ConvexError("ACCOUNT_DELETION_REQUESTED");
     const hasCodes = args.provinceCode !== undefined || args.cityCode !== undefined || args.districtCode !== undefined;
     const selection = hasCodes ? args : resolveLegacyRegion(args.city, args.district);
     const parsed = stylistApplicationSchema.safeParse({ ...args, ...selection });

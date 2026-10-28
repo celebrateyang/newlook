@@ -53,6 +53,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ gen
     if (!result) throw new Error("The image provider returned no side result");
     const key = `generations/user_${owned.session.userId}/gen_${generationId}_side_${randomUUID()}.webp`;
     stage = "store";
+    const storageToken = await owned.session.getToken({ template: "convex" });
+    if (!storageToken) throw new Error("Could not refresh the Convex authentication token");
+    owned.convex.setAuth(storageToken);
+    await owned.convex.mutation(api.privacy.registerObject, { key });
     await r2.send(new PutObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key, Body: result.bytes, ContentType: result.mimeType }));
     stage = "save";
     const token = await owned.session.getToken({ template: "convex" });
@@ -61,7 +65,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ gen
     const resultId = await owned.convex.mutation(api.generations.appendSideResult, { generationId: owned.data.generation._id, uploadKey: body.data.uploadKey, r2Key: key, durationMs: Date.now() - startedAt, providerRequestId: result.providerRequestId });
     stage = "preview";
     const url = await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }), { expiresIn: 3600 });
-    return NextResponse.json({ id: resultId, view: "side", url, promptVersion: HAIR_TRY_ON_PROMPT_VERSION });
+    const sourceUrl = await getSignedUrl(r2, new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: body.data.uploadKey }), { expiresIn: 900 });
+    return NextResponse.json({ id: resultId, view: "side", url, sourceUrl, promptVersion: HAIR_TRY_ON_PROMPT_VERSION });
   } catch (error) {
     const quotaResponse = quotaErrorResponse(error);
     if (quotaResponse) return quotaResponse;

@@ -20,6 +20,15 @@
 
 ## 内容维护
 
+### Search Console 实站检查 — 2026-10-27
+
+- 报告中的两条“网页会自动重定向”为 `http://newself.cc/` 和 `https://newself.cc/en/`。实测分别通过 308 跳转至 HTTPS 与无尾斜杠的 `/en`；属于预期 URL 规范化，不需要取消重定向，也不需要对该类别启动修正验证。
+- 唯一“网页已编入索引，但没有内容”为 `https://clerk.newself.cc/`，属于 Clerk Frontend API，而非产品首页。该地址实测返回空 JSON 响应和 `X-Robots-Tag: noindex, nofollow`，现有响应已经要求搜索引擎不收录。已在 Search Console 启动修正验证，状态为“已开始”；尚未通过，不代表旧索引已移除。不要修改登录服务 DNS、代理或应用认证来消除此提示。
+- 英文首页 `/en` 在 Google 索引报告中已收录。中英文首页均实测返回 200、可见 HTML 正文、自引用 canonical 和 `index, follow`；更换为 Googlebot User-Agent 的 HTTP 检查也通过，但该模拟请求本身不证明真实 Google 抓取。
+- `/sitemap.xml` 返回 200 和有效 XML，包含 12 个公开页面；`/robots.txt` 返回 200 并声明正确的 sitemap，未禁止抓取公开页面。已重新提交原 sitemap，Google 显示“已成功提交站点地图”；站点地图报告仍为“无法抓取”，尚不能声称处理完成。Google 网址检查的实时测试另行确认该 XML 地址在 2026-10-27 20:38（北京时间）抓取成功、允许抓取。实时抓取成功与 sitemap 报告处理成功是两个不同状态；不要反复删除或提交、添加随机查询参数来隐藏旧状态。
+- 中文首页 `/zh` 此前为“Google 无法识别此网址”。Google 实时测试确认“网址可编入 Google 索引”。首次请求索引遇到 Google reCAPTCHA 服务连接错误；刷新后重试成功，Google 明确显示“已请求编入索引”，并确认已加入优先抓取队列。最终收录仍未确认，不要重复提交同一网页。
+- 此次未修改产品代码、登录配置或部署。后续检查 Clerk 验证结果、sitemap 的成功状态/发现页面数及中文首页收录情况。
+
 元数据与公开页面清单：`src/lib/seo/site.ts`。中文产品事实、流程和问答：`src/lib/seo/chinese-content.ts`。调整免费额度、导出语言、隐私或招募状态时，同步更新该内容源及相关产品页面。
 
 根布局根据 Proxy 注入的真实路径确定索引规则。不要将个人结果或可撤回分享页加入公开页面清单。新增语言或页面时核对 canonical、hreflang 和 sitemap 是否相互一致。

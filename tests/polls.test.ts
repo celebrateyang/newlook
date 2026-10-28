@@ -89,6 +89,12 @@ test("a network cannot bypass its limit by creating new anonymous browser identi
   for (let i = 0; i < 60; i++) await t.mutation(api.polls.rate, { proof: proof({ voterId: `anon:networkvisitor${i}` }) });
   await expect(t.mutation(api.polls.rate, { proof: proof({ voterId: "anon:one-more" }) })).rejects.toThrow("RATE_LIMITED");
 });
+test("a deleted account cannot reuse a still-fresh signed vote proof", async () => {
+  const { t } = await setup();
+  const signed = proof({ accountId: "deleted", voterId: "deleted" });
+  await t.run(ctx => ctx.db.insert("deletedAccounts", { clerkId: "deleted", createdAt: Date.now() }));
+  await expect(t.mutation(api.polls.rate, { proof: signed })).rejects.toThrow("INVALID_VOTE");
+});
 test("signed-in owners cannot rate their own polls; existing single links allow anonymous updates", async () => {
   const { t, owner, ids } = await setup();
   await expect(t.mutation(api.polls.rate, { proof: proof({ accountId: "owner", voterId: "owner" }) })).rejects.toThrow("SELF_VOTE");

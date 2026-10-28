@@ -8,13 +8,18 @@
  * @module
  */
 
+import type * as advisor from "../advisor.js";
 import type * as anonymousVotes from "../anonymousVotes.js";
 import type * as crons from "../crons.js";
 import type * as generationQuota from "../generationQuota.js";
 import type * as generations from "../generations.js";
 import type * as hairstyleCatalog from "../hairstyleCatalog.js";
 import type * as hairstyles from "../hairstyles.js";
+import type * as mediaCleanup from "../mediaCleanup.js";
 import type * as polls from "../polls.js";
+import type * as privacy from "../privacy.js";
+import type * as quality from "../quality.js";
+import type * as salonLocationFields from "../salonLocationFields.js";
 import type * as shares from "../shares.js";
 import type * as stylistApplicationFields from "../stylistApplicationFields.js";
 import type * as stylistApplications from "../stylistApplications.js";
@@ -27,13 +32,18 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  advisor: typeof advisor;
   anonymousVotes: typeof anonymousVotes;
   crons: typeof crons;
   generationQuota: typeof generationQuota;
   generations: typeof generations;
   hairstyleCatalog: typeof hairstyleCatalog;
   hairstyles: typeof hairstyles;
+  mediaCleanup: typeof mediaCleanup;
   polls: typeof polls;
+  privacy: typeof privacy;
+  quality: typeof quality;
+  salonLocationFields: typeof salonLocationFields;
   shares: typeof shares;
   stylistApplicationFields: typeof stylistApplicationFields;
   stylistApplications: typeof stylistApplications;

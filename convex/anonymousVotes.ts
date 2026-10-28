@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import type { MutationCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internalMutation } from "./_generated/server";
 
 export const voteProof = v.object({
@@ -12,13 +12,14 @@ export function votePayload(proof: Omit<VoteProof, "signature">) {
   return JSON.stringify([proof.kind, proof.token, proof.index, proof.score, proof.voterId, proof.networkId, proof.accountId, proof.issuedAt]);
 }
 
-export async function verifyVote(proof: VoteProof) {
+export async function verifyVote(proof: VoteProof, ctx?: MutationCtx | QueryCtx) {
   const secret = process.env.SHARING_SIGNING_SECRET;
   if (!secret || secret.length < 32) throw new ConvexError({ code: "RATING_UNAVAILABLE" });
   if (!/^[a-f0-9]{48}$/.test(proof.token) || !/^[a-f0-9]{64}$/.test(proof.signature) || !proof.voterId || proof.voterId.length > 150 || !/^[a-f0-9]{64}$/.test(proof.networkId) || Math.abs(Date.now() - proof.issuedAt) > 60_000 || !Number.isInteger(proof.index) || !Number.isInteger(proof.score) || proof.score < 1 || proof.score > 5) throw new ConvexError({ code: "INVALID_VOTE" });
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
   const signature = Uint8Array.from(proof.signature.match(/../g)!, value => parseInt(value, 16));
   if (!await crypto.subtle.verify("HMAC", key, signature, new TextEncoder().encode(votePayload(proof)))) throw new ConvexError({ code: "INVALID_VOTE" });
+  if (ctx && proof.accountId && await ctx.db.query("deletedAccounts").withIndex("by_clerk_id", q => q.eq("clerkId", proof.accountId)).unique()) throw new ConvexError({ code: "INVALID_VOTE" });
 }
 
 export async function limitVote(ctx: MutationCtx, proof: VoteProof) {

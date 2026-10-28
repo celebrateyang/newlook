@@ -6,6 +6,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { r2Env } from "@/lib/env";
 import { createR2Client } from "@/lib/r2/client";
+import { ownedConvex } from "@/lib/convex/server";
+import { api } from "../../../../../convex/_generated/api";
 
 const requestSchema = z.object({
   type: z.enum(["original", "reference", "side"]),
@@ -24,6 +26,9 @@ export async function POST(request: Request) {
   const folder = body.data.type === "reference" ? "references" : "uploads";
   const prefix = body.data.type;
   const key = `${folder}/user_${userId}/${prefix}_${randomUUID()}.${extensions[body.data.mimeType]}`;
+  const convex = await ownedConvex();
+  if (!convex) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  await convex.mutation(api.privacy.registerObject, { key });
   const command = new PutObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key, ContentType: body.data.mimeType, ContentLength: body.data.size });
   const uploadUrl = await getSignedUrl(createR2Client(), command, { expiresIn: 300 });
   return NextResponse.json({ uploadUrl, key, expiresIn: 300 });

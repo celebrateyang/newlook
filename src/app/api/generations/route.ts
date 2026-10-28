@@ -17,7 +17,7 @@ import { createR2Client } from "@/lib/r2/client";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const requestSchema = z.object({ uploadKey: z.string().min(1).max(500), styleSlug: z.string().min(1).max(80) });
+const requestSchema = z.object({ uploadKey: z.string().min(1).max(500), styleSlug: z.string().min(1).max(80), consultationId: z.string().min(1).max(100).optional() });
 
 export async function POST(request: Request) {
   const startedAt = Date.now();
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
     generationId = await convex.mutation(api.generations.start, {
       uploadKey: body.data.uploadKey, styleSlug: style.slug, provider: "openai", model: env.OPENAI_IMAGE_MODEL,
       promptVersion: HAIR_TRY_ON_PROMPT_VERSION,
+      advisorSessionId: body.data.consultationId as Id<"advisorSessions"> | undefined,
     });
 
     const r2 = createR2Client();
@@ -62,6 +63,8 @@ export async function POST(request: Request) {
     const keys: string[] = [];
     for (const result of results) {
       const key = `generations/user_${session.userId}/gen_${generationId}_${randomUUID()}.webp`;
+      await refreshConvexAuth();
+      await convex.mutation(api.privacy.registerObject, { key });
       await r2.send(new PutObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key, Body: result.bytes, ContentType: result.mimeType }));
       keys.push(key);
     }

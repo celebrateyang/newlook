@@ -87,6 +87,8 @@ export async function POST(request: Request) {
     const keys: string[] = [];
     for (const result of results) {
       const key = `generations/user_${session.userId}/gen_${generationId}_${randomUUID()}.webp`;
+      await refreshConvexAuth();
+      await convex.mutation(api.privacy.registerObject, { key });
       await r2.send(new PutObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key, Body: result.bytes, ContentType: result.mimeType }));
       keys.push(key);
     }

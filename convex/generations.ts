@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { catalogDocument, hairstyleCatalog } from "./hairstyleCatalog";
 import { DAILY_GENERATION_LIMIT, quotaDay, readQuota, reserveGeneration } from "./generationQuota";
 import { paginationOptsValidator } from "convex/server";
+import { queueMediaDeletion } from "./privacy";
 
 async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -11,13 +12,17 @@ async function requireIdentity(ctx: { auth: { getUserIdentity(): Promise<{ subje
 }
 
 export const start = mutation({
-  args: { uploadKey: v.string(), styleSlug: v.string(), provider: v.string(), model: v.string(), promptVersion: v.string() },
+  args: { uploadKey: v.string(), styleSlug: v.string(), provider: v.string(), model: v.string(), promptVersion: v.string(), advisorSessionId: v.optional(v.id("advisorSessions")) },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     const user = await ctx.db.query("users").withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject)).unique();
     if (!user) throw new Error("User profile not found");
     const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
     if (!upload || upload.userId !== user._id || upload.type !== "original") throw new Error("Upload not found");
+    if (args.advisorSessionId) {
+      const assessment = await ctx.db.get(args.advisorSessionId);
+      if (!assessment || assessment.userId !== user._id || assessment.uploadId !== upload._id) throw new Error("Assessment not found");
+    }
     const style = hairstyleCatalog[args.styleSlug as keyof typeof hairstyleCatalog];
     if (!style) throw new Error("Unsupported hairstyle");
     let hairstyle = await ctx.db.query("hairstyles").withIndex("by_slug", (q) => q.eq("slug", args.styleSlug)).unique();
@@ -31,7 +36,7 @@ export const start = mutation({
     if (!hairstyle) throw new Error("Could not create hairstyle");
     await reserveGeneration(ctx, user._id);
     return await ctx.db.insert("generations", {
-      userId: user._id, uploadId: upload._id, hairstyleId: hairstyle._id, provider: args.provider,
+      userId: user._id, uploadId: upload._id, hairstyleId: hairstyle._id, advisorSessionId: args.advisorSessionId, provider: args.provider,
       model: args.model, promptVersion: args.promptVersion, status: "processing", creditsUsed: 0, createdAt: Date.now(),
     });
   },
@@ -101,9 +106,15 @@ export const appendSideResult = mutation({
     const upload = await ctx.db.query("uploads").withIndex("by_r2_key", (q) => q.eq("r2Key", args.uploadKey)).unique();
     if (!upload || upload.userId !== user._id || upload.type !== "side") throw new Error("Side upload not found");
     const existing = await ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect();
-    for (const result of existing.filter((item) => item.view === "side")) await ctx.db.delete(result._id);
+    for (const result of existing.filter((item) => item.view === "side")) {
+      for (const share of await ctx.db.query("resultShares").withIndex("by_result", q => q.eq("generationResultId", result._id)).collect()) await ctx.db.patch(share._id, { active: false, updatedAt: Date.now() });
+      for (const poll of await ctx.db.query("hairstylePolls").withIndex("by_user", q => q.eq("userId", user._id)).collect()) if (poll.resultIds.includes(result._id)) await ctx.db.patch(poll._id, { active: false, updatedAt: Date.now() });
+      await queueMediaDeletion(ctx, user.clerkId, result.r2Key);
+      for (const review of await ctx.db.query("previewReviews").withIndex("by_result", q => q.eq("resultId", result._id)).collect()) await ctx.db.delete(review._id);
+      await ctx.db.delete(result._id);
+    }
     const createdAt = Date.now();
-    const resultId = await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key: args.r2Key, view: "side", selected: false, createdAt });
+    const resultId = await ctx.db.insert("generationResults", { generationId: args.generationId, r2Key: args.r2Key, sideUploadId: upload._id, view: "side", selected: false, createdAt });
     await ctx.db.insert("modelUsage", {
       userId: generation.userId, generationId: args.generationId, provider: generation.provider, model: generation.model,
       taskType: "hair_try_on_side", durationMs: args.durationMs, status: "completed", providerRequestId: args.providerRequestId, createdAt,
@@ -145,13 +156,18 @@ export const getMine = query({
     if (!user || user.clerkId !== identity.subject) return null;
     const hairstyle = await ctx.db.get(generation.hairstyleId);
     const upload = await ctx.db.get(generation.uploadId);
-    if (!hairstyle || !upload) return null;
+    if (!hairstyle || !upload || upload.userId !== user._id) return null;
     const [results, referenceUpload] = await Promise.all([
       ctx.db.query("generationResults").withIndex("by_generation", (q) => q.eq("generationId", args.generationId)).collect(),
       generation.referenceUploadId ? ctx.db.get(generation.referenceUploadId) : Promise.resolve(null),
     ]);
     if (referenceUpload && referenceUpload.userId !== user._id) return null;
-    return { generation, hairstyle, upload, referenceUpload, results };
+    const assessment = generation.advisorSessionId ? await ctx.db.get(generation.advisorSessionId) : null;
+    const sideSources = (await Promise.all(results.map(async result => {
+      const source = result.sideUploadId ? await ctx.db.get(result.sideUploadId) : null;
+      return source?.userId === user._id && source.type === "side" ? { resultId: result._id, r2Key: source.r2Key } : null;
+    }))).filter((source): source is { resultId: typeof results[number]["_id"]; r2Key: string } => source !== null);
+    return { generation, hairstyle, upload, referenceUpload, results, sideSources, assessment: assessment?.userId === user._id && assessment.uploadId === upload._id ? assessment : null };
   },
 });
 

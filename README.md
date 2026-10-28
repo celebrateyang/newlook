@@ -62,6 +62,12 @@ Official setup: [Convex with Vercel](https://docs.convex.dev/production/hosting/
 
 Use `pnpm convex function-spec` (development) or `pnpm convex function-spec --prod` to inspect deployed functions. The side-view flow requires `generations:startSide` and `generations:appendSideResult`; a missing starter causes immediate failure before AI generation.
 
+## Photo privacy and recommendation quality
+
+The recommendation flow collects length-change, perm and styling-time preferences. It saves a user-owned, photo-bound assessment and uses conservative discussion rules for the result page and guide exports. Unassessed results are labelled general style references; user quality reviews do not certify identity or salon outcomes.
+
+`/en/settings/privacy` and `/zh/settings/privacy` let owners delete photos and dependent results, individual hairstyles, all media, or their account. App access/sharing is removed first; R2 cleanup is queued and retried. Configure the four server-only R2 values in the matching **Convex** deployment, with object delete permission, before releasing this feature. Clerk `user.deleted` webhooks at `/api/webhooks/clerk` require `CLERK_WEBHOOK_SIGNING_SECRET` in Web and the existing matching `SHARING_SIGNING_SECRET` in both services. See [release configuration, retention boundaries and evidence](docs/recommendation-readiness.md).
+
 ## Saved hairstyles and comparison sharing
 
 `/en/looks` and `/zh/looks` show the signed-in owner's saved front and side results, with pagination. Select 2–6 images to create a public comparison page. Friends can rate each image from 1–5 without signing in; the page shows averages and a ranking. Owners can disable the link. Only explicitly selected generated images and their collage become public.

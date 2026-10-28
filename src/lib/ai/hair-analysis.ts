@@ -3,6 +3,7 @@ import { z } from "zod";
 import { analysisEnv } from "@/lib/env";
 import { buildHairAnalysisPrompt } from "./prompts/hair-analysis";
 import type { Locale } from "@/lib/i18n/locale";
+import { defaultPreferences, type AdvisorPreferences } from "../../../shared/advisor";
 
 const hairstyleSlugs = [
   "soft-layered-cut",
@@ -70,7 +71,6 @@ export const hairAnalysisSchema = z.object({
   recommendations: z.array(z.object({
     styleSlug: z.enum(hairstyleSlugs),
     name: z.string().min(1),
-    matchScore: z.number().int().min(0).max(100),
     reason: z.string().min(1),
     maintenance: z.enum(["low", "medium", "high"]),
   })).min(3).max(3),
@@ -102,11 +102,10 @@ const jsonSchema = {
         properties: {
           styleSlug: { type: "string", enum: hairstyleSlugs },
           name: { type: "string" },
-          matchScore: { type: "integer", minimum: 0, maximum: 100 },
           reason: { type: "string" },
           maintenance: { type: "string", enum: ["low", "medium", "high"] },
         },
-        required: ["styleSlug", "name", "matchScore", "reason", "maintenance"],
+        required: ["styleSlug", "name", "reason", "maintenance"],
       },
     },
     disclaimer: { type: "string" },
@@ -124,11 +123,12 @@ function outputText(payload: unknown) {
   return parsed.data.output?.flatMap((item) => item.content ?? []).find((item) => item.type === "output_text")?.text;
 }
 
-export async function analyzeHairImage(bytes: Uint8Array, mimeType: string, locale: Locale = "en"): Promise<HairAnalysis> {
+export async function analyzeHairImage(bytes: Uint8Array, mimeType: string, locale: Locale = "en", preferences: AdvisorPreferences = defaultPreferences): Promise<HairAnalysis> {
   const env = analysisEnv();
   const imageUrl = `data:${mimeType};base64,${Buffer.from(bytes).toString("base64")}`;
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
+    signal: AbortSignal.timeout(90_000),
     headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: env.OPENAI_ANALYSIS_MODEL,
@@ -136,7 +136,7 @@ export async function analyzeHairImage(bytes: Uint8Array, mimeType: string, loca
       input: [{
         role: "user",
         content: [
-          { type: "input_text", text: buildHairAnalysisPrompt(locale) },
+          { type: "input_text", text: buildHairAnalysisPrompt(locale, preferences) },
           { type: "input_image", image_url: imageUrl, detail: "high" },
         ],
       }],

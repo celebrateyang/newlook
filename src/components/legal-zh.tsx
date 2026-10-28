@@ -29,7 +29,7 @@ const privacy = [
     "照片存储在私有 Cloudflare R2 存储桶中，通过短期签名链接访问。链接过期只会限制链接访问，不会删除文件。我们使用身份验证、归属检查、传输加密、访问控制和受限服务端凭据。任何存储或传输方式都无法保证绝对安全。"
   ]],
   ["7. 保留与删除", [
-    "原始自拍和参考照片通常在 7 天内删除，除非你主动保存关联结果，或你请求的功能需要继续存储。",
+    "未使用的上传和未完成的图片文件将在 7 天后安排清理；保存结果所需的照片会继续保留，直到你删除或结果不再需要它们。",
     "你保存的生成结果在账户有效期间保留，直到你删除或请求删除。",
     "失败或放弃的临时生成文件会在合理可行的情况下尽快删除。",
     "删除账户或提交经验证的删除请求后，我们将在 30 天内从活动系统删除或去标识化关联账户记录、照片和生成结果。",
@@ -37,7 +37,7 @@ const privacy = [
   ]],
   ["8. 你的选择与权利", [
     "根据所在地，你可能有权访问、更正、删除、限制、反对处理或获取个人信息副本；在处理依赖同意时，有权撤回同意。你可以通过账户界面更新部分账户信息。",
-    "如需完整删除账户及服务数据，请使用账户关联邮箱发送邮件至 hello@newself.cc。完成请求前，我们可能需要验证你的身份。"
+    "可在“照片隐私与删除”中删除照片、依赖它的结果、全部图片，或账户及应用数据。应用访问和受影响的分享会先撤销；存储文件随后进入可重试清理队列，并为正在进行的上传保留短暂宽限期。已有签名链接可能在文件清理或链接过期前继续有效。账户删除会同时删除登录账户；如该步骤失败，会提示待处理并支持重试。我们保留最少的删除标记，防止旧凭据重新创建数据。如需帮助或通过邮件提交经验证的请求，可使用账户关联邮箱联系 hello@newself.cc。"
   ]],
   ["9. Cookie", [
     "我们与 Clerk 使用必要 Cookie 及类似技术来验证用户身份、维持会话、防止滥用和运行服务。newself 目前不使用第三方广告 Cookie，也不为定向广告出售数据。",
@@ -101,7 +101,7 @@ const terms = [
 
 export function ChineseLegalContent({ kind }: { kind: "privacy" | "terms" }) {
   return <>
-    <p className="text-sm font-semibold text-ink/45">生效日期：{kind === "privacy" ? "2026 年 10 月 3 日" : "2026 年 9 月 30 日"}</p>
+    <p className="text-sm font-semibold text-ink/45">生效日期：{kind === "privacy" ? "2026 年 10 月 27 日" : "2026 年 9 月 30 日"}</p>
     <p>{kind === "privacy" ? "本隐私政策说明你使用 newself.cc 及其 AI 发型顾问功能时，newself（下称“我们”）如何收集、使用、共享和保护信息。" : "本服务条款（下称“条款”）适用于你使用 newself.cc 及 newself AI 发型顾问服务。创建账户或使用 newself，即表示你同意本条款及我们的隐私政策。"}</p>
     {(kind === "privacy" ? privacy : terms).map(([heading, paragraphs]) => <section key={heading} className="space-y-3"><h2 className="font-display text-2xl font-bold tracking-tight text-ink">{heading}</h2>{paragraphs.map(text => <p key={text}>{text}</p>)}</section>)}
   </>;
