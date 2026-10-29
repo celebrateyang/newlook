@@ -2,11 +2,13 @@
 
 Last updated: 2026-10-29
 
-## P0 photo safety and regression acceptance — in progress, 2026-10-29
+## P0 photo safety and regression acceptance — 2026-10-29
 
 - Development branch adds explicit new/legacy file provenance, a seven-day cancellation window after seven idle days, owner keep controls, final dependency checks, conservative legacy preservation, cause/status audit records, cleanup-worker leases and private account-deletion progress receipts. Web and Convex changes must deploy together. See [rules, test setup and CI boundaries](p0-verification.md).
-- `pnpm verify` passed all 89 tests, Web/Convex TypeScript and lint. Production build passed. Four real signed-out browser checks passed across English/Chinese desktop/mobile. The development backend was deployed; production has not been changed by this P0 branch.
-- First live development run found that R2 allows localhost:3000 but rejects localhost:3001. Read-only OPTIONS requests confirmed both this and the production origin's allowed status. Switched the test runner to the already allowed port without changing bucket policy. The failed run issued no AI request; its marked test accounts were removed and the one registered test upload was queued for cleanup. Real-service acceptance is still running; do not treat the checks above as its completion.
+- `pnpm verify` passed all 89 tests, Web/Convex TypeScript and lint. Production build passed. Four real signed-out browser checks passed across English/Chinese desktop/mobile. The development backend was deployed. Release and CI acceptance are tracked in [PR #1](https://github.com/celebrateyang/newlook/pull/1).
+- The real development-service browser acceptance passed in 16.7 minutes at approximately 21:17 Asia/Shanghai. One real analysis and one image generation succeeded; source comparison, feedback persistence after reload, JPG/PDF/ZIP downloads with valid file signatures, another account's read/delete rejection, Chinese mobile rendering, keeping/deleting the test photo and actual Clerk account deletion all passed. The status receipt reported completion after the actual 15-minute storage grace period; HEAD returned 404 for the exact source/result keys. Final read-only checks confirmed all four disposable accounts across both attempts return Clerk 404, no matching application users or queued deletions remain, and their R2 prefixes contain zero objects.
+- First live development attempt found that R2 allows localhost:3000 but rejects localhost:3001. Read-only OPTIONS requests confirmed both this and the production origin's allowed status. Switched the test runner to the already allowed port without changing bucket policy. That failed attempt issued no AI request and its single orphan upload was also cleared by the application worker.
+- Before release, a production read-only check found zero queued deletions and 17 tracked files with legacy/missing provenance. The new rules preserve all of these. Existing production originals are not used for destructive acceptance tests. Real customer/salon outcomes and deleting an ordinary production account remain outside this acceptance.
 
 ## Recommendation quality and media privacy — 2026-10-27
 
