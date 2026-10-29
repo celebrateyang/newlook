@@ -1,6 +1,6 @@
 # newself Current Status
 
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 ## Recommendation quality and media privacy — 2026-10-27
 
@@ -10,7 +10,9 @@ Last updated: 2026-10-28
 - Added owner photo thumbnails and deletion controls for photos/dependent results, individual hairstyles, all media and accounts. Access/sharing is removed transactionally; private R2 files are queued with an in-flight grace period and retries. Daily quota survives media deletion. Added expiry for unused tracked files, paginated adoption of legacy database-owned files and a verified Clerk deletion-webhook handler. See [release configuration and boundaries](recommendation-readiness.md).
 - Added English public workflow/FAQ/JSON-LD, aligned generation allowance and accurate identity copy in both languages, a fictional consultation demo, and three bilingual haircut discussion topics in the public sitemap. No customer testimonial or verified salon case was fabricated.
 - Local production build and targeted safety checks passed; final validation is recorded in the readiness document. Real R2 upload/read/delete returned the expected 404 after cleanup. One real OpenAI analysis and one image edit succeeded using an existing fictional catalog model. These isolated checks do not establish the full signed-in/hosted workflow.
-- Published `9fd0718` through the integrated Vercel/Convex build on 2026-10-28 after configuring production R2 cleanup and the Clerk user.deleted endpoint/signing secret. The joined signed-in flow succeeded using a new fictional fixture; quality feedback survived reload. Production signature checks rejected invalid input and accepted valid repeated synthetic deletion events. Follow-up fixes refine length ambiguity, align maintenance estimates and remove remaining absolute identity copy. Hosted file cleanup and real Clerk account deletion remain separate checks. See the readiness document for exact evidence and limits.
+- Published `9fd0718` and follow-up `24990c2` through the integrated Vercel/Convex build on 2026-10-28 after configuring production R2 cleanup and the Clerk user.deleted endpoint/signing secret. The joined signed-in flow succeeded using a new fictional fixture; quality feedback survived reload. Follow-up fixes refine length ambiguity, align maintenance estimates and remove remaining absolute identity copy. All 81 tests, TypeScript, lint and the production build passed.
+- Final production deletion verification on 2026-10-29: the user-approved fictional source/result both return R2 404, the matching deletion queue is empty, source/generation/review records are gone and the revoked share image returns 404. Vercel request logs confirmed the authenticated guide GET returned 200; browser automation did not capture the file-download completion event. Signature checks rejected invalid input and accepted valid repeated synthetic deletion events; deleting a real Clerk account remains untested.
+- Final audit also found a legacy-retention incident: two old side-source uploads had been automatically cleared because early side previews lacked source IDs. Those originals were not recoverable from R2. All 13 saved generated images remain readable. Added conservative owner-scoped protection for unresolved legacy side sources and a regression test; corrected the prior claim that existing photos were unaffected. See [incident details and evidence limits](recommendation-readiness.md).
 
 ## Search Console production audit — 2026-10-27
 

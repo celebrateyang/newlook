@@ -179,7 +179,19 @@ export const expire = internalMutation({ args: {}, handler: async ctx => {
     if (upload) {
       const uses = [...await ctx.db.query("generations").withIndex("by_upload", q => q.eq("uploadId", upload._id)).collect(), ...await ctx.db.query("generations").withIndex("by_reference", q => q.eq("referenceUploadId", upload._id)).collect()];
       live = uses.some(g => g.status === "completed" || (g.status === "processing" && g.createdAt > Date.now() - 60 * 60 * 1000));
-      if (upload.type === "side" && await ctx.db.query("generationResults").withIndex("by_side_upload", q => q.eq("sideUploadId", upload._id)).first()) live = true;
+      if (upload.type === "side") {
+        if (await ctx.db.query("generationResults").withIndex("by_side_upload", q => q.eq("sideUploadId", upload._id)).first()) live = true;
+        // Old side previews did not record their source ID. Absence of a link is
+        // not evidence that this owner's side photo is unused. Keep it while
+        // any of their saved side previews has an unresolved source.
+        if (!live) {
+          const history = await ctx.db.query("generations").withIndex("by_user", q => q.eq("userId", upload.userId)).collect();
+          for (const generation of history) {
+            const results = await ctx.db.query("generationResults").withIndex("by_generation", q => q.eq("generationId", generation._id)).collect();
+            if (results.some(result => result.view === "side" && !result.sideUploadId)) { live = true; break; }
+          }
+        }
+      }
     } else if (object.r2Key.startsWith("generations/")) live = await ctx.db.query("generationResults").withIndex("by_r2_key", q => q.eq("r2Key", object.r2Key)).first() !== null;
     if (live) await ctx.db.patch(object._id, { expiresAt: Date.now() + 24 * 60 * 60 * 1000 });
     else { if (upload) await eraseUpload(ctx, object.clerkId, upload._id); else await queueMediaDeletion(ctx, object.clerkId, object.r2Key); }

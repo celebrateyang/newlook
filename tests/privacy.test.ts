@@ -133,3 +133,23 @@ test("deleting a side photo removes its dependent result, and deleted generation
   await expect(owner.mutation(api.privacy.registerObject, { key: `generations/user_user_owner/gen_${generationId}_late.webp` })).rejects.toThrow("Generation no longer available");
   await t.finishAllScheduledFunctions(vi.runAllTimers);
 });
+
+test("legacy side previews protect unresolved side sources only within their owner's history", async () => {
+  const { t, owner, other, userId, generationId } = await setup();
+  const legacyKey = "uploads/user_user_owner/side_legacy.jpg";
+  const otherKey = "uploads/user_user_other/side_unused.jpg";
+  await t.run(async ctx => {
+    await ctx.db.insert("uploads", { userId, type: "side", r2Key: legacyKey, mimeType: "image/jpeg", size: 100, createdAt: Date.now() });
+    await ctx.db.insert("generationResults", { generationId, r2Key: `generations/user_user_owner/gen_${generationId}_legacy.webp`, view: "side", selected: false, createdAt: Date.now() });
+  });
+  await owner.mutation(api.privacy.registerObject, { key: legacyKey });
+  await other.mutation(api.privacy.registerObject, { key: otherKey });
+  await other.mutation(api.uploads.recordCompleted, { type: "side", r2Key: otherKey, mimeType: "image/jpeg", size: 100 });
+  vi.advanceTimersByTime(MEDIA_RETENTION_MS + 1);
+  await t.mutation(internal.privacy.expire, {});
+  expect((await owner.query(api.privacy.summary, {})).uploads.some(upload => upload.r2Key === legacyKey)).toBe(true);
+  expect((await owner.query(api.privacy.summary, {})).pendingFiles).toBe(0);
+  expect((await other.query(api.privacy.summary, {})).uploads).toHaveLength(0);
+  expect((await other.query(api.privacy.summary, {})).pendingFiles).toBe(1);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+});

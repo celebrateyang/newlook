@@ -1,4 +1,4 @@
-# Recommendation readiness — 2026-10-27
+# Recommendation readiness — updated 2026-10-29
 
 ## User-facing changes
 
@@ -10,6 +10,8 @@
 - English and Chinese public pages explain capabilities, limitations, processing, sign-in and daily quota. The top before/after is one actual API edit of an owned fictional catalog model; see [asset provenance](ai-example-provenance.md). The separate fictional consultation demo uses reviewed catalog images. Neither represents a customer or verified salon outcome. Three bilingual haircut discussion pages have reciprocal language metadata and public sitemap entries. Genuine customer/salon case studies still require permission and evidence.
 
 ## Media and account deletion
+
+- Legacy side-source protection: early side previews did not store `sideUploadId`. While an owner has any saved side preview with an unresolved source, their side uploads are conservatively retained instead of treating the missing link as proof of disuse. Other owners' files are evaluated independently. New side previews save their exact source link.
 
 - `/en/settings/privacy` and `/zh/settings/privacy` are noindex owner tools, linked from navigation, the gallery and privacy pages. They list private five-minute photo thumbnails, type and date so owners can identify what they are deleting.
 - Deleting an original/reference/linked side photo removes dependent hairstyle results. Deleting a hairstyle preserves original photos and other hairstyles. Deleting all media preserves account quota; deletion cannot reset daily generation limits.
@@ -39,4 +41,13 @@ Deploy Convex and Web together with the existing integrated build. New fields ar
 - Published commit `9fd0718` to production on 2026-10-28 through the integrated Vercel/Convex build. The production domain served the new bilingual homepage, discussion topics, noindex privacy settings and 18-URL sitemap. Authenticated browser checks used a newly uploaded owned fictional model and confirmed analysis/preferences, one generated preview, reload, persisted quality feedback and the photo-bound guide. No pre-existing customer photo was used as a test input.
 - The production Clerk webhook rejected an invalid signature with 400 and accepted a valid signed synthetic `user.deleted` payload twice with 200. Confirmed the synthetic account did not exist before this check. This verifies signatures, the Web-to-Convex proof and idempotence; it does not claim deletion of a real Clerk account was exercised.
 - Live inspection found a coarse short/chin length overlap that incorrectly implied growth, and inconsistent model/catalog/guide upkeep labels. The follow-up uses an explicit length check, checks front length for bangs, prioritises constraints in preview cards, shares general upkeep estimates with exports, and includes catalog maintenance in prompt `hair-analysis-v4-maintenance`. Removed two remaining absolute face-preservation claims from the reference workflow.
-- Hosted file cleanup after its grace period and real Clerk account deletion still require their own verification; the checks above do not imply these have completed.
+- Follow-up `24990c2` was confirmed Ready in Vercel on 2026-10-28. This is the final application code for the length/maintenance/copy corrections above.
+- With explicit user confirmation, the manual test deletion targeted only the new fictional source and its generated preview. Confirmed the source bytes matched the owned catalog fixture before deletion. Application source/generation/quality records disappeared and the public test share image returned 404 immediately. On 2026-10-29, R2 HEAD returned 404 for **both** recorded fixture objects, with zero matching queued or retrying deletions. This confirms the hosted worker completed actual file cleanup; no manual direct R2 delete was used for these two objects. A separate automatic legacy-retention defect was discovered afterwards; see the incident below.
+- Vercel Request Logs recorded the authenticated guide GET returning 200 on 2026-10-28. The PDF renderer was checked locally, but the Chrome automation download-completion event timed out; do not claim the downloaded production file was inspected. No Chrome internal-page security restriction was bypassed.
+- Remaining evidence limits: real Clerk account deletion through the public account control/profile UI has not been exercised, and no real customer/salon outcome benchmark has been collected. Synthetic signed-webhook and backend ownership/deletion tests do not substitute for those checks.
+
+## Legacy side-source retention incident — 2026-10-29
+
+The first retention implementation treated unlinked side uploads as unused. Older saved side previews did not record their source upload ID, so that assumption was unsafe. Comparing the production photo list before and after the scheduled cleanup showed two October 2 side-upload records had disappeared. A read-only R2 listing restricted to that same owner's uploads prefix found no remaining side-source objects. These original files could not be recovered; recreating them from generated previews would misrepresent their provenance.
+
+The fix preserves an owner's side uploads while any of their saved side previews lacks a source link. A regression test covers this legacy case and confirms that another owner's genuinely unused side upload still expires. Existing saved results were checked with R2 HEAD: all 13 objects remained readable, including the legacy side preview. There were zero pending production deletions at the audit. The earlier statement that existing photos were unaffected was corrected explicitly with the user. Source photos need to be re-uploaded if they want to use those two original side photos again.
