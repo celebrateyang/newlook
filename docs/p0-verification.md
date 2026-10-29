@@ -24,6 +24,8 @@ The ignored `e2e/.state/users.json` manifest identifies only dedicated test user
 
 `Verify` runs on pushes and pull requests, including the four public browser checks. `Development service E2E` is manual, serialized and scoped to the `e2e-development` environment. It has no Convex deployment key: deploy the matching development backend before dispatch. It needs that environment's development Clerk key, Web/Convex-matching sharing secret, R2 settings and OpenAI key, with public development URL/key/model variables. Do not put production Clerk/Convex credentials there. Any R2 credential used by a runner must be approved for that destination; a dedicated test bucket is preferable. No secrets have been copied to GitHub as part of this change.
 
+The public browser job requires repository variable `E2E_CLERK_PUBLISHABLE_KEY` pointing to a real development instance; it is a public browser identifier, not a server credential. The local browser server uses port 3000 because the existing R2 CORS policy already permits that origin. Tests do not broaden bucket CORS settings. Vercel Preview currently lacks a Convex deployment key and therefore cannot run the integrated preview deployment; production deployment uses its existing separate configuration.
+
 Clerk's official [Playwright guide](https://clerk.com/docs/guides/development/testing/playwright/overview) and [test helpers](https://clerk.com/docs/guides/development/testing/playwright/test-helpers) describe this authenticated testing flow. No product authentication bypass is added.
 
 ## Evidence

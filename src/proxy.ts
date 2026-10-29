@@ -20,7 +20,7 @@ export default clerkMiddleware((_auth, request) => {
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   if (!isApi) response.cookies.set(LOCALE_COOKIE, locale, { path: "/", maxAge: 31_536_000, sameSite: "lax", secure: request.nextUrl.protocol === "https:" });
   return response;
-});
+}, { jwtKey: process.env.CLERK_JWT_KEY });
 
 export const config = {
   matcher: [
