@@ -109,7 +109,7 @@ export const appendSideResult = mutation({
     for (const result of existing.filter((item) => item.view === "side")) {
       for (const share of await ctx.db.query("resultShares").withIndex("by_result", q => q.eq("generationResultId", result._id)).collect()) await ctx.db.patch(share._id, { active: false, updatedAt: Date.now() });
       for (const poll of await ctx.db.query("hairstylePolls").withIndex("by_user", q => q.eq("userId", user._id)).collect()) if (poll.resultIds.includes(result._id)) await ctx.db.patch(poll._id, { active: false, updatedAt: Date.now() });
-      await queueMediaDeletion(ctx, user.clerkId, result.r2Key);
+      await queueMediaDeletion(ctx, user.clerkId, result.r2Key, "superseded_side");
       for (const review of await ctx.db.query("previewReviews").withIndex("by_result", q => q.eq("resultId", result._id)).collect()) await ctx.db.delete(review._id);
       await ctx.db.delete(result._id);
     }

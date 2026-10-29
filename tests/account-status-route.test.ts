@@ -1,0 +1,23 @@
+import { beforeEach, expect, test, vi } from "vitest";
+import { createHash } from "node:crypto";
+const mock = vi.hoisted(() => ({ query: vi.fn() }));
+vi.mock("@/lib/convex/server", () => ({ publicConvex: () => ({ query: mock.query }) }));
+import { GET } from "../src/app/api/privacy/account-status/route";
+beforeEach(() => vi.resetAllMocks());
+test("receipt status uses a hashed bearer capability and private responses", async () => {
+  const receipt = "a".repeat(64);
+  expect((await GET(new Request(`https://example.com/api/privacy/account-status?receipt=${receipt}`))).status).toBe(404);
+  expect(mock.query).not.toHaveBeenCalled();
+  const request = () => new Request("https://example.com/api/privacy/account-status", { headers: { Authorization: `Bearer ${receipt}` } });
+  mock.query.mockResolvedValue({ complete: false, pendingFiles: 2 });
+  const response = await GET(request());
+  expect(mock.query.mock.calls[0][1]).toEqual({ receiptHash: createHash("sha256").update(receipt).digest("hex") });
+  expect(response.headers.get("Cache-Control")).toContain("no-store");
+  expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+  mock.query.mockResolvedValue(null);
+  expect((await GET(request())).status).toBe(404);
+  mock.query.mockRejectedValue(Error("private backend detail"));
+  const failure = await GET(request());
+  expect(failure.status).toBe(503);
+  expect(await failure.text()).not.toContain("private backend detail");
+});

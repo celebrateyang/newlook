@@ -4,6 +4,8 @@ newself is an AI hairstyle advisor: it analyses a person's face and current hair
 
 Official site: [newself.cc](https://newself.cc)
 
+Photo retention safeguards, deletion receipts, browser regression commands and development-only acceptance setup are documented in [P0 verification](docs/p0-verification.md). `pnpm verify` runs before the integrated Vercel deployment.
+
 ## Stylist recruitment
 
 `/zh/stylists` and `/en/stylists` introduce mainland China stylist recruitment. The navigation link is available to signed-out and signed-in visitors on mobile and desktop. Clerk sign-in and the matching Convex backend are required to save applications; visitors can read the recruitment page without signing in.

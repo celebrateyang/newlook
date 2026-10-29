@@ -6,7 +6,7 @@ vi.mock("@clerk/nextjs/server", () => ({ auth: mock.auth, clerkClient: async () 
 vi.mock("@/lib/r2/client", () => ({ createR2Client: () => ({}) }));
 vi.mock("@/lib/env", () => ({ r2Env: () => ({ R2_BUCKET_NAME: "test" }) }));
 vi.mock("@aws-sdk/s3-request-presigner", () => ({ getSignedUrl: async () => "https://storage.example/owner-preview" }));
-import { GET, DELETE } from "../src/app/api/privacy/route";
+import { GET, DELETE, PATCH } from "../src/app/api/privacy/route";
 beforeEach(() => { vi.resetAllMocks(); mock.owned.mockResolvedValue({ query: mock.query, mutation: mock.mutation }); mock.auth.mockResolvedValue({ userId: "owner" }); mock.mutation.mockResolvedValue({ pendingFiles: 2 }); mock.deleteUser.mockResolvedValue({}); });
 function request(body: unknown, origin = "https://example.com") { return new Request("https://example.com/api/privacy", { method: "DELETE", headers: { "Content-Type": "application/json", origin }, body: JSON.stringify(body) }); }
 test("deletion requires same origin, authentication and explicit scope confirmation", async () => {
@@ -39,4 +39,18 @@ test("retrying an already deleted Clerk account completes idempotently", async (
   mock.deleteUser.mockRejectedValue({ status: 404 });
   const response = await DELETE(request({ scope: "account", confirm: "DELETE" }));
   expect(response.status).toBe(202); expect(await response.json()).toMatchObject({ accountDeleted: true });
+});
+
+test("keeping a photo checks origin, session and ownership failures", async () => {
+  expect((await PATCH(request({ uploadId: "photo" }, "https://other.example"))).status).toBe(403);
+  mock.owned.mockResolvedValue(null);
+  expect((await PATCH(request({ uploadId: "photo" }))).status).toBe(401);
+  mock.owned.mockRejectedValue(Error("offline"));
+  expect((await PATCH(request({ uploadId: "photo" }))).status).toBe(503);
+  mock.owned.mockResolvedValue({ mutation: mock.mutation });
+  expect((await PATCH(request({}))).status).toBe(400);
+  mock.mutation.mockRejectedValue(Error("other owner"));
+  expect((await PATCH(request({ uploadId: "photo" }))).status).toBe(404);
+  mock.mutation.mockResolvedValue(null);
+  expect((await PATCH(request({ uploadId: "photo" }))).status).toBe(200);
 });
