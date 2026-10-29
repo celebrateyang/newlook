@@ -1,0 +1,44 @@
+name: Development service E2E
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: newself-development-e2e
+  cancel-in-progress: false
+jobs:
+  live:
+    environment: e2e-development
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      E2E_LIVE: '1'
+      E2E_ALLOW_TEST_DATA: '1'
+      CONVEX_DEPLOYMENT: ${{ vars.CONVEX_DEPLOYMENT }}
+      E2E_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+      NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      SHARING_SIGNING_SECRET: ${{ secrets.SHARING_SIGNING_SECRET }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_ANALYSIS_MODEL: ${{ vars.OPENAI_ANALYSIS_MODEL }}
+      OPENAI_IMAGE_MODEL: ${{ vars.OPENAI_IMAGE_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+      # Deploy compatible backend to this development instance before dispatch.
+      # No deployment credential is passed to the runner.
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      # Live reports, downloads, auth state and manifests stay off public artifacts.
