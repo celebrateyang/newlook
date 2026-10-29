@@ -26,6 +26,8 @@ The ignored `e2e/.state/users.json` manifest identifies only dedicated test user
 
 The public browser job requires repository variable `E2E_CLERK_PUBLISHABLE_KEY` pointing to a real development instance; it is a public browser identifier, not a server credential. The local browser server uses port 3000 because the existing R2 CORS policy already permits that origin. Tests do not broaden bucket CORS settings. Vercel Preview currently lacks a Convex deployment key and therefore cannot run the integrated preview deployment; production deployment uses its existing separate configuration.
 
+For the public CI job, `prepare-public-e2e.mjs` fetches that instance's HTTPS JWKS and prepares its public PEM verification key. The standard Clerk middleware accepts optional `CLERK_JWT_KEY` for genuine offline signature verification; production leaves this optional setting unset. CI uses a non-credential placeholder for the SDK's required secret-key field and exercises signed-out routes only. No real backend API secret or authenticated service access is provided. An ambiguous key rotation fails explicitly for review rather than selecting an arbitrary key.
+
 Clerk's official [Playwright guide](https://clerk.com/docs/guides/development/testing/playwright/overview) and [test helpers](https://clerk.com/docs/guides/development/testing/playwright/test-helpers) describe this authenticated testing flow. No product authentication bypass is added.
 
 ## Evidence
