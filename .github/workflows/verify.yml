@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.E2E_CLERK_PUBLISHABLE_KEY }}
-      # Deliberately invalid key: these checks exercise only signed-out routes.
+      # Non-credential placeholder; genuine Clerk signatures use the fetched public key.
       CLERK_SECRET_KEY: sk_test_public_smoke_placeholder
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,7 @@ jobs:
       - name: Require public development instance configuration
         run: test -n "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/prepare-public-e2e.mjs
       - run: pnpm verify
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
