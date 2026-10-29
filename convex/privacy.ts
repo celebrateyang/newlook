@@ -182,7 +182,7 @@ export const keepUpload = mutation({ args: { uploadId: v.id("uploads") }, handle
   const upload = await ctx.db.get(uploadId), user = upload ? await ctx.db.get(upload.userId) : null;
   if (!upload || user?.clerkId !== identity.subject) throw new Error("Photo not found");
   const object = await ctx.db.query("mediaObjects").withIndex("by_key", q => q.eq("r2Key", upload.r2Key)).unique();
-  if (!object) throw new Error("Photo no longer available");
+  if (!object || object.clerkId !== identity.subject || !ownsMedia(identity.subject, object.r2Key)) throw new Error("Photo no longer available");
   await ctx.db.patch(object._id, { retained: true, reviewUntil: undefined, retentionReason: "kept_by_owner", expiresAt: Date.now() + week, updatedAt: Date.now() });
 } });
 
@@ -250,7 +250,7 @@ export const expire = internalMutation({ args: {}, handler: async ctx => {
   await ctx.scheduler.runAfter(0, internal.mediaCleanup.drain, {});
   const audit = await ctx.db.query("mediaDeletionAudit").withIndex("by_expiry", q => q.lte("expiresAt", Date.now())).take(100);
   for (const row of audit) {
-    const pending = await ctx.db.query("mediaDeletions").filter(q => q.eq(q.field("auditId"), row._id)).first();
+    const pending = await ctx.db.query("mediaDeletions").withIndex("by_audit", q => q.eq("auditId", row._id)).first();
     if (!pending) await ctx.db.delete(row._id);
     else await ctx.db.patch(row._id, { expiresAt: Date.now() + MEDIA_AUDIT_RETENTION_MS });
   }
