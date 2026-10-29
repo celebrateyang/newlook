@@ -613,5 +613,6 @@
   "Aim to preserve your face, expression, body, clothes and background": "以保留你的五官、表情、身体、服装和背景为目标",
   "Compare with your selfie; AI can drift toward the reference person's face": "请与自拍对照，AI 仍可能偏向参考人物的面容",
   "Working…": "正在处理…",
-  "Side photo": "侧面照片"
+  "Side photo": "侧面照片",
+  "New unused photos enter a 7-day cancellation window after 7 days. Older photos with incomplete links are retained. Saved preview sources and photos you choose to keep remain until you delete them.": "新照片闲置 7 天后，再提供 7 天取消清理。关联不明的旧照片继续保留。保存效果图所需的原图，以及你选择保留的照片，会保留到你主动删除。"
 }

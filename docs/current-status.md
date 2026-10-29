@@ -2,6 +2,12 @@
 
 Last updated: 2026-10-29
 
+## P0 photo safety and regression acceptance — in progress, 2026-10-29
+
+- Development branch adds explicit new/legacy file provenance, a seven-day cancellation window after seven idle days, owner keep controls, final dependency checks, conservative legacy preservation, cause/status audit records, cleanup-worker leases and private account-deletion progress receipts. Web and Convex changes must deploy together. See [rules, test setup and CI boundaries](p0-verification.md).
+- `pnpm verify` passed all 89 tests, Web/Convex TypeScript and lint. Production build passed. Four real signed-out browser checks passed across English/Chinese desktop/mobile. The development backend was deployed; production has not been changed by this P0 branch.
+- First live development run found that R2 allows localhost:3000 but rejects localhost:3001. Read-only OPTIONS requests confirmed both this and the production origin's allowed status. Switched the test runner to the already allowed port without changing bucket policy. The failed run issued no AI request; its marked test accounts were removed and the one registered test upload was queued for cleanup. Real-service acceptance is still running; do not treat the checks above as its completion.
+
 ## Recommendation quality and media privacy — 2026-10-27
 
 - Added explicit length-change, perm and daily-styling preferences to personal analysis. Removed uncalibrated match percentages. Saved assessments are account-owned, bound to the exact original photo, and attached to generation records.

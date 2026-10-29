@@ -100,10 +100,11 @@ export default async function PrivacyPage() {
       <section className="space-y-3">
         <h2 className={headingClass}>7. Retention and deletion</h2>
         <ul className={listClass}>
-          <li>Unused uploads and unfinished image files are scheduled for cleanup after 7 days. Photos needed by a saved result remain while that result needs them or until you delete them.</li>
+          <li>New unused uploads and unfinished image files enter review after 7 days, with a further 7 days to choose to keep them in photo settings. We recheck saved-result dependencies before cleanup. Older files with uncertain usage links, saved-preview sources and photos you choose to keep are retained until you delete them.</li>
           <li>Generated results you save remain available while your account is active or until you delete them or request deletion.</li>
           <li>Failed or abandoned temporary generation files are deleted as soon as reasonably practicable.</li>
           <li>When you delete your account or submit a verified deletion request, we delete or de-identify associated account records, photos, and generated results from active systems within 30 days.</li>
+          <li>Photo settings show cleanup reasons, times and execution status for 30 days, without photo contents or storage links. A private account-deletion receipt allows status checks for 30 days after sign-out. Keep it private.</li>
         </ul>
         <p>
           Limited records may remain longer in backups or where required for security, fraud prevention, dispute resolution, or legal compliance. Backup copies are isolated from ordinary use and removed according to applicable backup cycles.
